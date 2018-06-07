@@ -1,6 +1,5 @@
-#  Hello World Examples
-EXE=ex1 ex2 ex3 ex4 ex5
-all: $(EXE)
+# Example 6
+EXE=lorenz
 
 # Main target
 all: $(EXE)
@@ -15,18 +14,24 @@ else
 ifeq "$(shell uname)" "Darwin"
 CFLG=-O3 -Wall -Wno-deprecated-declarations
 LIBS=-framework GLUT -framework OpenGL
-CLEAN=rm -f $(EXE) *.o *.a
 #  Linux/Unix/Solaris
 else
 CFLG=-O3 -Wall
 LIBS=-lglut -lGLU -lGL -lm
+endif
+#  OSX/Linux/Unix/Solaris
 CLEAN=rm -f $(EXE) *.o *.a
 endif
-endif
 
-#  Generic compile and link
-%:%.c
-	gcc $(CFLG) -o $@ $^ $(LIBS)
+# Compile rules
+.c.o:
+	gcc -c $(CFLG) $<
+.cpp.o:
+	g++ -c $(CFLG) $<
+
+#  Link
+lorenz:lorenz.o
+	gcc -O3 -o $@ $^   $(LIBS)
 
 #  Clean
 clean:
