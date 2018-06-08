@@ -1,5 +1,6 @@
 # Example 6
-EXE=lorenz
+#lorenz 
+EXE=hw1-lorenz
 
 # Main target
 all: $(EXE)
@@ -30,8 +31,8 @@ endif
 	g++ -c $(CFLG) $<
 
 #  Link
-lorenz:lorenz.o
-	gcc -O3 -o $@ $^   $(LIBS)
+hw1-lorenz:hw1-lorenz.o
+	gcc -O3 -o $@ $^   $(LIBS)	
 
 #  Clean
 clean:
