@@ -142,11 +142,25 @@ void display()
    glRasterPos3d(0,0,90);
    Print("Z");
    //  Display parameters
-   glWindowPos2i(5,5);
-   if(mode == 1)
-      Print("View Angle=%d,%d \r\n x:%.1lf, y:%.1lf, z:%.1lf \r\n Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",th,ph,x,y,z,s,b,r);
-   else if (mode == 2)
-      Print("View Angle=%d,%d \r\n x:%.1lf, y:%.1lf, z:%.1lf x2:%.1lf, y2:%.1lf, z2:%.1lf\r\n Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",th,ph,x,y,z,x2,y2,z2,s,b,r);
+   
+   if(mode == 1){
+      glWindowPos2i(5,45);
+      Print("View Angle=%d,%d",th,ph);
+      glWindowPos2i(5,25);
+      Print("Lorenz Attractor 1 Initial Coordinates: x:%.1lf, y:%.1lf, z:%.1lf",x,y,z);
+      glWindowPos2i(5,5);
+      Print("Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",s,b,r);
+   }   
+   else if (mode == 2){
+      glWindowPos2i(5,65);
+      Print("View Angle=%d,%d",th,ph);
+      glWindowPos2i(5,45);
+      Print("Lorenz Attractor 1 Initial Coordinates: x:%.1lf, y:%.1lf, z:%.1lf",x,y,z);
+      glWindowPos2i(5,25);
+      Print("Lorenz Attractor 2 Initial Coordinates: x:%.1lf, y:%.1lf, z:%.1lf",x2,y2,z2);
+      glWindowPos2i(5,5);
+      Print("Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",s,b,r);
+   }
      
    // Title Box
    glWindowPos2i(5,750);
