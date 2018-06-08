@@ -70,23 +70,29 @@ void Print(const char* format , ...)
       glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,*ch++);
 }
 
+void lorenz(double x, double y, double z,double s,double b ,double r){
+   /*
+   *  Integrate 50,000 steps (50 time units with dt = 0.001)
+   *  Explicit Euler integration
+   */
+   glVertex3d(x,y,z);   
+   for (int i=0;i<50000;i++)
+   {
+      double dx = s*(y-x);
+      double dy = x*(r-z)-y;
+      double dz = x*y - b*z;
+      x += dt*dx;
+      y += dt*dy;
+      z += dt*dz;
+      glVertex3d(x,y,z);
+   }  
+}
+
 /*
  *  Display the scene
  */
 void display()
 {  
-   int i;
-   //Temp copy of intial coordinates
-   double initx, inity, initz;
-   initx=x;
-   inity=y;
-   initz=z;
-
-   double initx2, inity2, initz2;
-   initx2=x2;
-   inity2=y2;
-   initz2=z2;
-
    //  Clear the image
    glClear(GL_COLOR_BUFFER_BIT);
    //  Reset previous transforms
@@ -95,75 +101,25 @@ void display()
    glRotated(ph,1,0,0);
    glRotated(th,0,1,0);
    
-   //  Draw 10 pixel yellow points
-   
    glBegin(GL_LINE_STRIP);
    switch (mode)
    {
-   
    //  One Lorenz
    case 1:
-	   /*
-	    *  Integrate 50,000 steps (50 time units with dt = 0.001)
-	    *  Explicit Euler integration
-	    */
       glColor3f(1,1,0);
-	   glVertex3d(x,y,z);
-	   for (i=0;i<50000;i++)
-	   {
-	      double dx = s*(y-x);
-	      double dy = x*(r-z)-y;
-	      double dz = x*y - b*z;
-	      x += dt*dx;
-	      y += dt*dy;
-	      z += dt*dz;
-	      glVertex3d(x,y,z);
-	   }	
-
-      //Reset the original coordinates
-      x=initx;
-      y=inity;
-      z=initz;
-
+	   //call lorenz function to generate vertices
+      lorenz(x,y,z,s,b,r);
+      
       break;
    //  Two Lorenzs
    case 2:
       //First Lorenz
       glColor3f(1,1,0);
-      glVertex3d(x,y,z);
-      for (i=0;i<50000;i++)
-      {
-         double dx = s*(y-x);
-         double dy = x*(r-z)-y;
-         double dz = x*y - b*z;
-         x += dt*dx;
-         y += dt*dy;
-         z += dt*dz;
-         glVertex3d(x,y,z);
-      }
-
+      lorenz(x,y,z,s,b,r);
+      
       //Second Lorenz
       glColor3f(1,0,0);
-      glVertex3d(x2,y2,z2);
-      for (i=0;i<50000;i++)
-      {
-         double dx = s*(y2-x2);
-         double dy = x2*(r-z2)-y2;
-         double dz = x2*y2 - b*z2;
-         x2 += dt*dx;
-         y2 += dt*dy;
-         z2 += dt*dz;
-         glVertex3d(x2,y2,z2);
-      }    
-
-      //Reset the original coordinates
-      x=initx;
-      y=inity;
-      z=initz;
-
-      x2=initx2;
-      y2=inity2;
-      z2=initz2;
+      lorenz(x2,y2,z2,s,b,r);
       break;
    }
    glEnd();
@@ -200,6 +156,8 @@ void display()
    glFlush();
    glutSwapBuffers();
 }
+
+
 
 /*
  *  GLUT calls this routine when a key is pressed
