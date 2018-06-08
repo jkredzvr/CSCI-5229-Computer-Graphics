@@ -4,11 +4,14 @@
  *  Display Lorenz Attractor
  *
  *  Key bindings:
- *  1      2D coordinates
- *  2      2D coordinates with fixed Z value
- *  3      3D coordinates
- *  4      4D coordinates
- *  +/-    Increase/decrease z or w
+ *  1      (1) Lorenz Attractor
+ *  2      (2) Lorenz Attractors w/ modifable 2nd Lorenz initial conditions
+ *  q/w    Decrease/Increase x intial coordinate for 2nd Lorenz Attractor 
+ *  a/s    Decrease/Increase y intial coordinate for 2nd Lorenz Attractor 
+ *  z/x    Decrease/Increase z intial coordinate for 2nd Lorenz Attractor
+ *  o/p    Decrease/Increase s intial coordinate for 2nd Lorenz Attractor
+ *  k/l    Decrease/Increase b intial coordinate for 2nd Lorenz Attractor
+ *  n/m    Decrease/Increase r intial coordinate for 2nd Lorenz Attractor
  *  arrows Change view angle
  *  0      Reset view angle
  *  ESC    Exit
@@ -28,25 +31,26 @@
 //  Globals
 int th=0;       // Azimuth of view angle
 int ph=0;       // Elevation of view angle
-int mode=1;     // Dimension (1-4)
+int mode=1;     // Dimension (1-2)
 double dim=100;   // Dimension of orthogonal box
-char* text[] = {"","2D","3D constant Z","3D","4D"};  // Dimension display text
+char* text[] = {"","(1) Lorenz Attractor","(2) Lorenz Attractors w/ modifable 2nd Lorenz initial conditions"};  // Dimension display text
 
 /*  Lorenz Parameters  */
 double s  = 10;
 double b  = 2.6666;
 double r  = 28;
 
-int i;
-
-
 /*  Intial Coordinates  */
 double x = 1;
 double y = 1;
 double z = 1;
-/*  Time step  */
+
+/* Lorenz Calculation Time step  */
 double dt = 0.001;
 
+double x2 = 3;
+double y2 = 3;
+double z2 = 3;
 /*
  *  Convenience routine to output raster text
  *  Use VARARGS to make this more flexible
@@ -71,11 +75,17 @@ void Print(const char* format , ...)
  */
 void display()
 {  
+   int i;
+   //Temp copy of intial coordinates
    double initx, inity, initz;
-
    initx=x;
    inity=y;
    initz=z;
+
+   double initx2, inity2, initz2;
+   initx2=x2;
+   inity2=y2;
+   initz2=z2;
 
    //  Clear the image
    glClear(GL_COLOR_BUFFER_BIT);
@@ -86,25 +96,18 @@ void display()
    glRotated(th,0,1,0);
    
    //  Draw 10 pixel yellow points
-   glColor3f(1,1,0);
-   glPointSize(5);
+   
    glBegin(GL_LINE_STRIP);
    switch (mode)
    {
-   //  Two dimensions
-   case 2:
-      glVertex2d(0.1,0.1);
-      glVertex2d(0.3,0.3);
-      glVertex2d(0.5,0.5);
-      glVertex2d(0.7,0.7);
-      glVertex2d(0.9,0.9);
-      break;
-   //  Three dimensions - constant Z
+   
+   //  One Lorenz
    case 1:
 	   /*
 	    *  Integrate 50,000 steps (50 time units with dt = 0.001)
 	    *  Explicit Euler integration
 	    */
+      glColor3f(1,1,0);
 	   glVertex3d(x,y,z);
 	   for (i=0;i<50000;i++)
 	   {
@@ -123,24 +126,48 @@ void display()
       z=initz;
 
       break;
-   //  Three dimensions - variable Z
-   case 3:
-      glVertex3d(0.1,0.1,0.1);
-      glVertex3d(0.3,0.3,0.2);
-      glVertex3d(0.5,0.5,0.4);
-      glVertex3d(0.7,0.7,0.6);
-      glVertex3d(0.9,0.9,0.9);
-      break;
-   //  Four dimensions
-   case 4:
-      glVertex3d(0.1,0.1,0.1);
-      glVertex3d(0.3,0.3,0.2);
-      glVertex3d(0.5,0.5,0.4);
-      glVertex3d(0.7,0.7,0.6);
-      glVertex3d(0.9,0.9,0.9);
+   //  Two Lorenzs
+   case 2:
+      //First Lorenz
+      glColor3f(1,1,0);
+      glVertex3d(x,y,z);
+      for (i=0;i<50000;i++)
+      {
+         double dx = s*(y-x);
+         double dy = x*(r-z)-y;
+         double dz = x*y - b*z;
+         x += dt*dx;
+         y += dt*dy;
+         z += dt*dz;
+         glVertex3d(x,y,z);
+      }
+
+      //Second Lorenz
+      glColor3f(1,0,0);
+      glVertex3d(x2,y2,z2);
+      for (i=0;i<50000;i++)
+      {
+         double dx = s*(y2-x2);
+         double dy = x2*(r-z2)-y2;
+         double dz = x2*y2 - b*z2;
+         x2 += dt*dx;
+         y2 += dt*dy;
+         z2 += dt*dz;
+         glVertex3d(x2,y2,z2);
+      }    
+
+      //Reset the original coordinates
+      x=initx;
+      y=inity;
+      z=initz;
+
+      x2=initx2;
+      y2=inity2;
+      z2=initz2;
       break;
    }
    glEnd();
+
    //  Draw axes in white
    glColor3f(1,1,1);
    glBegin(GL_LINES);
@@ -160,12 +187,18 @@ void display()
    Print("Z");
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("View Angle=%d,%d  %s\n x:%lf, y:%lf, z:%lf",th,ph,text[mode],x,y,z);
+   if(mode == 1)
+      Print("View Angle=%d,%d \r\n x:%.1lf, y:%.1lf, z:%.1lf \r\n Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",th,ph,x,y,z,s,b,r);
+   else if (mode == 2)
+      Print("View Angle=%d,%d \r\n x:%.1lf, y:%.1lf, z:%.1lf x2:%.1lf, y2:%.1lf, z2:%.1lf\r\n Lorenz Params: s:%.1lf b:%.1lf r:%.1lf ",th,ph,x,y,z,x2,y2,z2,s,b,r);
+     
+   // Title Box
+   glWindowPos2i(5,750);
+   Print("%s",text[mode]);
+   
    //  Flush and swap
    glFlush();
    glutSwapBuffers();
-
-
 }
 
 /*
@@ -179,15 +212,61 @@ void key(unsigned char ch,int x,int y)
    //  Reset view angle
    else if (ch == '0')
       th = ph = 0;
-   //  Increase w by 0.1
-   else if (ch == '+')
+   //Swap mode 1
+   else if (ch == '1')
+      mode = 1;
+   //Swap mode 2
+   else if (ch == '2')
+      mode = 2;
+   // Change Lorenz params 
+   else if (ch == 'p')
    {
-      //What to do when + pressed
+      s += 1;
    }
-   //  Decrease w by 0.1
-   else if (ch == '-')
+   else if (ch == 'o')
    {
-      //What to do when 0 pressed
+      s -= 1;
+   }
+   else if (ch == 'l')
+   {
+      b += 1;
+   }
+   else if (ch == 'k')
+   {
+      b -= 1;
+   }
+   else if (ch == 'm')
+   {
+      r += 1;
+   }
+   else if (ch == 'n')
+   {
+      r -= 1;
+   }
+   //Control second Lorenz starting coordinates
+   else if (ch == 'w' && mode == 2)
+   {
+      x2 += 1;
+   }
+   else if (ch == 'q' && mode == 2)
+   {
+      x2 -= 1;
+   }
+   else if (ch == 's' && mode == 2)
+   {
+      y2 += 1;
+   }
+   else if (ch == 'a' && mode == 2)
+   {
+      y2 -= 1;
+   }
+   else if (ch == 'x' && mode == 2)
+   {
+      z2 += 1;
+   }
+   else if (ch == 'z' && mode == 2)
+   {
+      z2 -= 1;
    }
    else{
       //Unassigned key pressed, so dont Redisplay
@@ -256,8 +335,8 @@ int main(int argc,char* argv[])
    glutInit(&argc,argv);
    //  Request double buffered, true color window 
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-   //  Request 500 x 500 pixel window
-   glutInitWindowSize(500,500);
+   //  Request 800 x 800 pixel window
+   glutInitWindowSize(800,800);
    //  Create the window
    glutCreateWindow("Justin Chin HW 1");
    //  Tell GLUT to call "display" when the scene should be drawn
