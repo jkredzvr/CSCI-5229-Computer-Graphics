@@ -11,7 +11,7 @@ At a minimum: ( get a simple scene rendered and basic user interaction)
 ---
 
 ### Application Instructions
-####How to change the view
+#### How to change the view
 
 * Press 1 key to view  (1) Lorenz Attractor 
 * Press 2 key to view(2) Lorenz Attractors w/ modifable 2nd Lorenz initial conditions
