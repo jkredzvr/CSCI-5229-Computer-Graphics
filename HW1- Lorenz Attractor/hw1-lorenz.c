@@ -1,7 +1,7 @@
 /*
- *  Coordinates
+ *  Justin Chin CSCI 5229 Computer Graphics Summer 2018
  *
- *  Display 2, 3 and 4 dimensional coordinates in 3D.
+ *  Display Lorenz Attractor
  *
  *  Key bindings:
  *  1      2D coordinates
@@ -29,8 +29,6 @@
 int th=0;       // Azimuth of view angle
 int ph=0;       // Elevation of view angle
 int mode=1;     // Dimension (1-4)
-double zz=0;     // Z variable
-double w=1;     // W variable
 double dim=100;   // Dimension of orthogonal box
 char* text[] = {"","2D","3D constant Z","3D","4D"};  // Dimension display text
 
@@ -40,7 +38,9 @@ double b  = 2.6666;
 double r  = 28;
 
 int i;
-/*  Coordinates  */
+
+
+/*  Intial Coordinates  */
 double x = 1;
 double y = 1;
 double z = 1;
@@ -70,7 +70,14 @@ void Print(const char* format , ...)
  *  Display the scene
  */
 void display()
-{
+{  
+   double initx, inity, initz;
+   printf("%lf %lf %lf ",x,y,z);
+   initx=x;
+   inity=y;
+   initz=z;
+
+   printf("%lf %lf %lf ",initx,inity,initz);
    //  Clear the image
    glClear(GL_COLOR_BUFFER_BIT);
    //  Reset previous transforms
@@ -95,12 +102,6 @@ void display()
       break;
    //  Three dimensions - constant Z
    case 1:
-      glVertex3d(0.0,0.0,0.0);
-      glVertex3d(1.0,1.0,1.0);
-
-      glVertex3d(-1.0,-1.0,-1.0);   
-
-	   //printf("%5d %8.3f %8.3f %8.3f\n",0,x,y,z);
 	   /*
 	    *  Integrate 50,000 steps (50 time units with dt = 0.001)
 	    *  Explicit Euler integration
@@ -115,15 +116,13 @@ void display()
 	      y += dt*dy;
 	      z += dt*dz;
 	      glVertex3d(x,y,z);
-	      //printf("%5d %8.3f %8.3f %8.3f\n",i+1,x,y,z);
 	   }	
 
+      //Reset the original coordinates
+      x=initx;
+      y=inity;
+      z=initz;
 
-      //glVertex3d(0.1,0.1,z);
-      //glVertex3d(0.3,0.3,z);
-      //glVertex3d(0.5,0.5,z);
-      //glVertex3d(0.7,0.7,z);
-      //glVertex3d(0.9,0.9,z);
       break;
    //  Three dimensions - variable Z
    case 3:
@@ -135,11 +134,11 @@ void display()
       break;
    //  Four dimensions
    case 4:
-      glVertex4d(0.1,0.1,0.1,w);
-      glVertex4d(0.3,0.3,0.2,w);
-      glVertex4d(0.5,0.5,0.4,w);
-      glVertex4d(0.7,0.7,0.6,w);
-      glVertex4d(0.9,0.9,0.9,w);
+      glVertex3d(0.1,0.1,0.1);
+      glVertex3d(0.3,0.3,0.2);
+      glVertex3d(0.5,0.5,0.4);
+      glVertex3d(0.7,0.7,0.6);
+      glVertex3d(0.9,0.9,0.9);
       break;
    }
    glEnd();
@@ -162,11 +161,7 @@ void display()
    Print("Z");
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("View Angle=%d,%d  %s",th,ph,text[mode]);
-   if (mode==2)
-      Print("  z=%.1f",zz);
-   else if (mode==4)
-      Print("  w=%.1f",w);
+   Print("View Angle=%d,%d  %s \n x:%lf, y:%lf, z:%lf",th,ph,text[mode],x,y,z);
    //  Flush and swap
    glFlush();
    glutSwapBuffers();
@@ -185,34 +180,21 @@ void key(unsigned char ch,int x,int y)
    //  Reset view angle
    else if (ch == '0')
       th = ph = 0;
-   //  Switch dimensions
-   else if ('1'<=ch && ch<='4')
-   {
-      mode = ch-'0';
-      if (mode==2) zz = 0;
-      if (mode==4) w = 1;
-   }
    //  Increase w by 0.1
    else if (ch == '+')
    {
-      if (mode==2)
-         zz += 0.1;
-      else
-         w += 0.1;
+      //What to do when + pressed
    }
    //  Decrease w by 0.1
    else if (ch == '-')
    {
-      if (mode==2)
-         zz -= 0.1;
-      else
-         w -= 0.1;
+      //What to do when 0 pressed
    }
    else{
+      //Unassigned key pressed, so dont Redisplay
       return;
    }
    //  Tell GLUT it is necessary to redisplay the scene
-   printf("hi");
    glutPostRedisplay();
 }
 
@@ -234,6 +216,7 @@ void special(int key,int x,int y)
    else if (key == GLUT_KEY_DOWN)
       ph -= 5;
    else{
+      //undefined special key pressed, dont redisplay
       return;
    }
    //  Keep angles to +/-360 degrees
