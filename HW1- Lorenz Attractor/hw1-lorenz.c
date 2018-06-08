@@ -72,12 +72,11 @@ void Print(const char* format , ...)
 void display()
 {  
    double initx, inity, initz;
-   printf("%lf %lf %lf ",x,y,z);
+
    initx=x;
    inity=y;
    initz=z;
 
-   printf("%lf %lf %lf ",initx,inity,initz);
    //  Clear the image
    glClear(GL_COLOR_BUFFER_BIT);
    //  Reset previous transforms
@@ -89,7 +88,7 @@ void display()
    //  Draw 10 pixel yellow points
    glColor3f(1,1,0);
    glPointSize(5);
-   glBegin(GL_POINTS);
+   glBegin(GL_LINE_STRIP);
    switch (mode)
    {
    //  Two dimensions
@@ -161,7 +160,7 @@ void display()
    Print("Z");
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("View Angle=%d,%d  %s \n x:%lf, y:%lf, z:%lf",th,ph,text[mode],x,y,z);
+   Print("View Angle=%d,%d  %s\n x:%lf, y:%lf, z:%lf",th,ph,text[mode],x,y,z);
    //  Flush and swap
    glFlush();
    glutSwapBuffers();
