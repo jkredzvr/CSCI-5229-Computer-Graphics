@@ -27,6 +27,8 @@ int ph=0;         //  Elevation of view angle
 double zh=0;      //  Rotation of teapot
 int axes=1;       //  Display axes
 int mode=0;       //  What to display
+int mode2=0;      // toggle depth
+int mode3=0;      //toggle face culling
 
 //  Cosine and Sine in degrees
 #define Cos(x) (cos((x)*3.1415927/180))
@@ -111,6 +113,17 @@ static void cube(double x,double y,double z,
    glPopMatrix();
 }
 
+static void ground(){
+   //  floor
+
+   glBegin(GL_QUADS);
+   glColor3f(0,1,0);
+   glVertex3f(-5,-5,+5);
+   glVertex3f(+5,-5,+5);
+   glVertex3f(+5,-5,-5);
+   glVertex3f(-5,-5,-5);
+   glEnd();
+}
 
 static void star(double x,double y,double z,
                  double dx,double dy,double dz,
@@ -183,18 +196,47 @@ static void star(double x,double y,double z,
    glEnd();
 
    // topleft-left
+   
    glColor3f(1,1,0);
    glBegin(GL_POLYGON);
    glVertex3f( 0.0, 0.0, 1);
    glVertex3f( -2.9, 0.9, 0.0);
    glVertex3f( -1.5, -0.5, 0.0);
    glEnd();
+   
    // topleft-right
    glColor3f(1,0,0);
    glBegin(GL_POLYGON);
    glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -2.9, 0.9, 0.0);
    glVertex3f( -1.0, 1.0, 0.0);
+   glVertex3f( -2.9, 0.9, 0.0);
+   glEnd();
+
+   ////
+   /* 
+   // top-right
+   glColor3f(1,0,0);
+   glBegin(GL_POLYGON);
+   glVertex3f( 1.0, 1.0, 0.0);
+   glVertex3f( 0.0, 3.0, 0.0);
+
+   glVertex3f( -1.0, 1.0, 0.0);
+
+   glVertex3f( -2.9, 0.9, 0.0);
+   //glVertex3f( -1.0, 1.0, 0.0);
+   glVertex3f( -1.5, -0.5, 0.0);
+  
+   glVertex3f( -1.8, -2.7, 0.0);
+   glVertex3f( 0.0, -1.0, 0.0);
+
+
+   glVertex3f( 1.8, -2.7, 0.0);
+   glVertex3f( 1.5, -0.5, 0.0);
+ 
+   glVertex3f( 2.9, 0.9, 0.0);
+   glEnd();
+   */
+
    
    //Backside
    // top-right
@@ -269,12 +311,13 @@ static void star(double x,double y,double z,
    glColor3f(1,0,0);
    glBegin(GL_POLYGON);
    glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -1.0, 1.0, 0.0);
    glVertex3f( -2.9, 0.9, 0.0);
 
+   glVertex3f( -1.0, 1.0, 0.0);
 
+   
    glEnd();
-
+   
 
    //  Undo transformations
    glPopMatrix();
@@ -573,15 +616,21 @@ void display()
    //  Set view angle
    glRotatef(ph,1,0,0);
    glRotatef(th,0,1,0);
+
+    //  Enable Z-buffering
+   if(mode2==0)
+      glEnable(GL_DEPTH_TEST);
+   else
+      glDisable(GL_DEPTH_TEST);
+   //  Enable face culling
+   if(mode3==0)
+      glEnable(GL_CULL_FACE);
+   else
+      glDisable(GL_CULL_FACE);
+   
    //  Decide what to draw
    switch (mode)
    {
-      //  Draw cubes
-      case 0:
-         cube(0,0,0 , 0.3,0.3,0.3 , 0);
-         cube(1,0,0 , 0.2,0.2,0.2 , 45);
-         cube(0,1,0 , 0.4,0.4,0.2 , 90);
-         break;
       //  Draw spheres
       case 1:
          sphere1(0,0,0 , 0.4);
@@ -595,6 +644,7 @@ void display()
       //  Polygon airplane
       case 3:
          star(1,0,0 , 0.2,0.2,0.2 , zh);
+         ground();
          break;
       //  Three flat airplanes
       case 4:
@@ -624,6 +674,8 @@ void display()
          glutSolidTeapot(0.5);
          glPopMatrix();
          break;
+      
+
    }
    //  White
    glColor3f(1,1,1);
@@ -699,6 +751,10 @@ void key(unsigned char ch,int x,int y)
       mode = (mode+1)%7;
    else if (ch == 'M')
       mode = (mode+6)%7;
+   else if (ch == 'b')
+      mode2 = (mode2+1)%2;   
+   else if (ch == 'n')
+      mode3 = (mode3+1)%2;
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -708,7 +764,7 @@ void key(unsigned char ch,int x,int y)
  */
 void reshape(int width,int height)
 {
-   const double dim=2.5;
+   const double dim=5;
    //  Ratio of the width to the height of the window
    double w2h = (height>0) ? (double)width/height : 1;
    //  Set the viewport to the entire window
