@@ -33,6 +33,15 @@ double asp=1;     //  Aspect ratio
 double dim=5.0;   //  Size of world
 double zh=0;      //  Rotation of stars
 
+double fwd=0;	  //  Roughly the x position of FPS starting at 0,0
+double left=0;    //  Rougly the y position of FPS starting at 0,0
+int th_fps=0;     //  Azimuth of view angle
+int ph_fps=0;     //  Elevation of view angle
+
+double head_height = 0.2; //Position of eye level
+char* modeTitles[]= {"Orthogonal","Perspective","FPS"}; 
+
+
 //  Macro for sin & cos in degrees
 #define Cos(th) cos(3.1415927/180*(th))
 #define Sin(th) sin(3.1415927/180*(th))
@@ -65,12 +74,18 @@ static void Project()
    glMatrixMode(GL_PROJECTION);
    //  Undo previous transformations
    glLoadIdentity();
-   //  Perspective transformation
-   if (mode)
-      gluPerspective(fov,asp,dim/4,4*dim);
-   //  Orthogonal projection
-   else
-      glOrtho(-asp*dim,+asp*dim, -dim,+dim, -dim,+dim);
+   //  Perspective transformation  
+   switch (mode){
+   		//Mode 0 ==  Orthogonal projection
+   		case 0:
+	   		glOrtho(-asp*dim,+asp*dim, -dim,+dim, -dim,+dim);
+    	//Mode 1 == PerspectiveView
+   		case 1:
+     		gluPerspective(fov,asp,dim/4,4*dim);  		
+      	case 2:
+     		gluPerspective(fov,asp,dim/4,4*dim);
+   }
+   
    //  Switch to manipulating the model matrix
    glMatrixMode(GL_MODELVIEW);
    //  Undo previous transformations
@@ -96,37 +111,37 @@ static void cube(double x,double y,double z,
    //  Cube
    glBegin(GL_QUADS);
    //  Front
-   glColor3f(1,0,0);
+   glColor4f(1,0,0,.1);
    glVertex3f(-1,-1, 1);
    glVertex3f(+1,-1, 1);
    glVertex3f(+1,+1, 1);
    glVertex3f(-1,+1, 1);
    //  Back
-   glColor3f(0,0,1);
+   glColor4f(0,0,1,.1);
    glVertex3f(+1,-1,-1);
    glVertex3f(-1,-1,-1);
    glVertex3f(-1,+1,-1);
    glVertex3f(+1,+1,-1);
    //  Right
-   glColor3f(1,1,0);
+   glColor4f(1,1,0,.1);
    glVertex3f(+1,-1,+1);
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,+1,-1);
    glVertex3f(+1,+1,+1);
    //  Left
-   glColor3f(0,1,0);
+   glColor4f(0,1,0,.1);
    glVertex3f(-1,-1,-1);
    glVertex3f(-1,-1,+1);
    glVertex3f(-1,+1,+1);
    glVertex3f(-1,+1,-1);
    //  Top
-   glColor3f(0,1,1);
+   glColor4f(0,1,1,.1);
    glVertex3f(-1,+1,+1);
    glVertex3f(+1,+1,+1);
    glVertex3f(+1,+1,-1);
    glVertex3f(-1,+1,-1);
    //  Bottom
-   glColor3f(1,0,1);
+   glColor4f(1,0,1,.1);
    glVertex3f(-1,-1,-1);
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,-1,+1);
@@ -297,13 +312,29 @@ static void star(double x,double y,double z,
    glVertex3f( 0.0, 0.0, -1);
    glVertex3f( -1.0, 1.0, 0.0);
    glVertex3f( -2.9, 0.9, 0.0);
-
-
    glEnd();
-
 
    //  Undo transformations
    glPopMatrix();
+}
+
+void PerspectiveEyeCalculation()
+{
+	double Ex = -2*dim*Sin(th)*Cos(ph);
+    double Ey = +2*dim        *Sin(ph);
+    double Ez = +2*dim*Cos(th)*Cos(ph);
+    gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
+}
+
+void FPSEyeCalculation()
+{
+	double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
+    double Ey = +2*dim        *Sin(ph_fps);
+    double Ez = +2*dim*Cos(th_fps)*Cos(ph_fps);
+    gluLookAt(left,head_height,fwd, Ex,Ey,Ez , 0,1,0);
+    printf("left: %f\n",left);
+    printf("head_height: %f\n",head_height);
+    printf("fwd: %f\n",fwd);
 }
 
 /*
@@ -319,25 +350,30 @@ void display()
    glEnable(GL_DEPTH_TEST);
    //  Undo previous transformations
    glLoadIdentity();
-   //  Perspective - set eye position
-   if (mode)
-   {
-      double Ex = -2*dim*Sin(th)*Cos(ph);
-      double Ey = +2*dim        *Sin(ph);
-      double Ez = +2*dim*Cos(th)*Cos(ph);
-      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
+
+   switch (mode){
+   		//Mode 0 Orthogonal
+   		case 0:
+   			glRotatef(ph,1,0,0);
+      		glRotatef(th,0,1,0);
+   		//Mode 1 == Perspective Orbital View	
+   		case 1:
+			PerspectiveEyeCalculation();
+      	case 2:
+      		//Mode 2 FPS POV 	
+     		FPSEyeCalculation();
    }
-   //  Orthogonal - set world orientation
-   else
-   {
-      glRotatef(ph,1,0,0);
-      glRotatef(th,0,1,0);
+
+   if (mode != 2){
+		cube(left,head_height,fwd,.1,.1,.1,0);
    }
+
    //  Draw stars
    for (i=-1;i<=1;i++)
       for (j=-1;j<=1;j++)
          for (k=-1;k<=1;k++)
-            star(i,j,k , 0.1,0.1,0.1 , zh);
+            cube(i,j,k , 0.3,0.3,0.3 , 0);
+
    //  Draw axes
    glColor3f(1,1,1);
    if (axes)
@@ -358,9 +394,11 @@ void display()
       glRasterPos3d(0.0,0.0,len);
       Print("Z");
    }
+
+   	
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s",th,ph,dim,fov,mode?"Perpective":"Orthogonal");
+   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",mode,th,ph,dim,fov,modeTitles[mode],th_fps,ph_fps,left,fwd);
    //  Render the scene and make it visible
    glFlush();
    glutSwapBuffers();
@@ -371,27 +409,47 @@ void display()
  */
 void special(int key,int x,int y)
 {
-   //  Right arrow key - increase angle by 5 degrees
-   if (key == GLUT_KEY_RIGHT)
-      th += 5;
-   //  Left arrow key - decrease angle by 5 degrees
-   else if (key == GLUT_KEY_LEFT)
-      th -= 5;
-   //  Up arrow key - increase elevation by 5 degrees
-   else if (key == GLUT_KEY_UP)
-      ph += 5;
-   //  Down arrow key - decrease elevation by 5 degrees
-   else if (key == GLUT_KEY_DOWN)
-      ph -= 5;
+	//Handle POV for non FPS mode
+	if(mode != 2){
+	   //  Right arrow key - increase angle by 5 degrees
+	   if (key == GLUT_KEY_RIGHT)
+	      th += 5;
+	   //  Left arrow key - decrease angle by 5 degrees
+	   else if (key == GLUT_KEY_LEFT)
+	      th -= 5;
+	   //  Up arrow key - increase elevation by 5 degrees
+	   else if (key == GLUT_KEY_UP)
+	      ph += 5;
+	   //  Down arrow key - decrease elevation by 5 degrees
+	   else if (key == GLUT_KEY_DOWN)
+	      ph -= 5;
+	   
+	}
+	else {
+		//  Right arrow key - increase angle by 5 degrees
+	   if (key == GLUT_KEY_RIGHT)
+	      th_fps += 5;
+	   //  Left arrow key - decrease angle by 5 degrees
+	   else if (key == GLUT_KEY_LEFT)
+	      th_fps -= 5;
+	   //  Up arrow key - increase elevation by 5 degrees
+	   else if (key == GLUT_KEY_UP)
+	      ph_fps += 5;
+	   //  Down arrow key - decrease elevation by 5 degrees
+	   else if (key == GLUT_KEY_DOWN)
+	      ph_fps -= 5;
+	}		
    //  PageUp key - increase dim
-   else if (key == GLUT_KEY_PAGE_UP)
-      dim += 0.1;
+   if (key == GLUT_KEY_PAGE_UP)
+   		dim += 0.1;
    //  PageDown key - decrease dim
    else if (key == GLUT_KEY_PAGE_DOWN && dim>1)
       dim -= 0.1;
    //  Keep angles to +/-360 degrees
    th %= 360;
    ph %= 360;
+   th_fps %= 360;
+   ph_fps %= 360;
    //  Update projection
    Project();
    //  Tell GLUT it is necessary to redisplay the scene
@@ -410,16 +468,32 @@ void key(unsigned char ch,int x,int y)
    else if (ch == '0')
       th = ph = 0;
    //  Toggle axes
-   else if (ch == 'a' || ch == 'A')
+   else if ((ch == 'a' || ch == 'A') && mode !=2 )
       axes = 1-axes;
    //  Switch display mode
    else if (ch == 'm' || ch == 'M')
-      mode = 1-mode;
+      mode = (mode+1) % 3;
    //  Change field of view angle
    else if (ch == '-' && ch>1)
       fov--;
    else if (ch == '+' && ch<179)
       fov++;
+   else
+
+   //Mode 2 == FPS for WASD movement controls
+   if(mode == 2){
+	   if (ch == 'w')
+	      fwd += 0.1;
+	   //  back
+	   else if (ch == 's')
+	      fwd -= 0.1; 
+	   //  Toggle axes
+	   else if (ch == 'a')
+	      left += 0.1;
+	   else if (ch == 'd')
+	      left -= 0.1;
+   }
+
    //  Reproject
    Project();
    //  Tell GLUT it is necessary to redisplay the scene
