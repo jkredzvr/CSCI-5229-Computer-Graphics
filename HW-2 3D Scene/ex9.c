@@ -24,7 +24,7 @@
 #include <GL/glut.h>
 #endif
 
-int axes=0;       //  Display axes
+int axes=1;       //  Display axes
 int mode=0;       //  Projection mode
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
@@ -79,11 +79,14 @@ static void Project()
    		//Mode 0 ==  Orthogonal projection
    		case 0:
 	   		glOrtho(-asp*dim,+asp*dim, -dim,+dim, -dim,+dim);
+	   		break;
     	//Mode 1 == PerspectiveView
    		case 1:
-     		gluPerspective(fov,asp,dim/4,4*dim);  		
+     		gluPerspective(fov,asp,dim/4,4*dim);
+     		break;		
       	case 2:
      		gluPerspective(fov,asp,dim/4,4*dim);
+     		break;
    }
    
    //  Switch to manipulating the model matrix
@@ -331,7 +334,7 @@ void FPSEyeCalculation()
 	double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
     double Ey = +2*dim        *Sin(ph_fps);
     double Ez = +2*dim*Cos(th_fps)*Cos(ph_fps);
-    gluLookAt(left,head_height,fwd, Ex,Ey,Ez , 0,1,0);
+    gluLookAt(0,head_height,0, Ex,Ey,Ez , 0,1,0);
     printf("left: %f\n",left);
     printf("head_height: %f\n",head_height);
     printf("fwd: %f\n",fwd);
@@ -356,23 +359,33 @@ void display()
    		case 0:
    			glRotatef(ph,1,0,0);
       		glRotatef(th,0,1,0);
+      		break;
    		//Mode 1 == Perspective Orbital View	
    		case 1:
 			PerspectiveEyeCalculation();
+			break;
       	case 2:
       		//Mode 2 FPS POV 	
      		FPSEyeCalculation();
+     		glRotatef(th_fps,0,1.0f,0); 
+     		glTranslated(-left,.2,-fwd);
+     		   
+     		break;
    }
 
-   if (mode != 2){
-		cube(left,head_height,fwd,.1,.1,.1,0);
-   }
+   
+	cube(left,head_height,fwd,.1,.1,.1,0);
+   
 
    //  Draw stars
-   for (i=-1;i<=1;i++)
-      for (j=-1;j<=1;j++)
-         for (k=-1;k<=1;k++)
-            cube(i,j,k , 0.3,0.3,0.3 , 0);
+   for (i=0;i<=2;i++) {
+   		double x = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
+   		double z = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
+   		double y = rand() % (int)(dim*.8 - dim*.7) + (dim*.7);
+   		printf("%f",z);
+   		printf("%f",x);
+   		star(x,0,0 , 0.02,0.02,0.02 , zh);
+   }
 
    //  Draw axes
    glColor3f(1,1,1);
@@ -386,6 +399,20 @@ void display()
       glVertex3d(0.0,0.0,0.0);
       glVertex3d(0.0,0.0,len);
       glEnd();
+
+      	//Grid surface
+      glBegin(GL_LINES);	
+      for(i=-dim/2;i<=dim/2;i++){
+  		glVertex3d(i,0.0,-dim/2);
+		glVertex3d(i,0.0,dim/2);
+      }
+		
+      for(i=-dim/2;i<=dim/2;i++){
+		glVertex3d(-dim/2,0.0,i);
+		glVertex3d(dim/2,0.0,i);
+	  }		
+      glEnd();
+
       //  Label axes
       glRasterPos3d(len,0.0,0.0);
       Print("X");
@@ -468,7 +495,7 @@ void key(unsigned char ch,int x,int y)
    else if (ch == '0')
       th = ph = 0;
    //  Toggle axes
-   else if ((ch == 'a' || ch == 'A') && mode !=2 )
+   else if (ch == '1')
       axes = 1-axes;
    //  Switch display mode
    else if (ch == 'm' || ch == 'M')
@@ -481,18 +508,26 @@ void key(unsigned char ch,int x,int y)
    else
 
    //Mode 2 == FPS for WASD movement controls
-   if(mode == 2){
-	   if (ch == 'w')
-	      fwd += 0.1;
-	   //  back
-	   else if (ch == 's')
-	      fwd -= 0.1; 
-	   //  Toggle axes
-	   else if (ch == 'a')
-	      left += 0.1;
-	   else if (ch == 'd')
-	      left -= 0.1;
+   //if(mode == 2){
+   if (ch == 'w'){
+      fwd += 0.1*Cos(th_fps);
+  	  left += 0.1*Sin(th_fps);	
    }
+   //  back
+   else if (ch == 's') {
+ 	  fwd += 0.1*Cos(th_fps+180);
+ 	  left += 0.1*Sin(th_fps+180); 
+   }
+   //  Toggle axes
+   else if (ch == 'a'){
+ 	  fwd += 0.1*Sin(th_fps+270);
+      left += 0.1*Cos(th_fps+270);
+   }
+   else if (ch == 'd') {
+      fwd += 0.1*Sin(th_fps+90);
+      left += 0.1*Cos(th_fps+90);	
+    }	
+   //}
 
    //  Reproject
    Project();
