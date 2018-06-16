@@ -41,6 +41,20 @@ int ph_fps=0;     //  Elevation of view angle
 double head_height = 0.2; //Position of eye level
 char* modeTitles[]= {"Orthogonal","Perspective","FPS"}; 
 
+//Eye Position
+double Ex = 0;
+double Ey = 0;
+double Ez = 0;
+
+double Cx = 0;
+double Cy = 0;
+double Cz = -1;
+
+//position want to move
+double dx = 0;
+double dy = 0;
+double dz = 0;
+
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
 StarPos StarPosArr[] = {
    {1, 2.4, -1,10},
@@ -345,10 +359,44 @@ void PerspectiveEyeCalculation()
 
 void FPSEyeCalculation()
 {
-	double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
-    double Ey = +2*dim        *Sin(ph_fps);
-    double Ez = +2*dim*Cos(th_fps)*Cos(ph_fps);
-    gluLookAt(0,head_height,0, Ex,Ey,Ez , 0,1,0);
+	//double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
+    //double Ey = +2*dim        *Sin(ph_fps);
+    //double Ez = +2*dim*Cos(th_fps)*Cos(ph_fps);
+    
+    //Move Left or Right, just update the camera look at postion
+    if(dx != 0){
+		th_fps += dx;
+		Cx = Ex+Sin(th_fps); 
+		Cy = Ey;
+		Cz = Ez+Cos(th_fps);
+	}
+	else if ( dx ==0 && dy==0 && dz == 0){
+		
+	}
+	else{
+		
+		//double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
+		//double Ey = +2*dim        *Sin(ph_fps);
+
+		//New Eye position
+		Ex += .1*Sin(th_fps);
+		//Ey += .1*dy;
+		Ez += .1*Cos(th_fps);
+
+		Cx = Ex+Sin(th_fps); 
+		Cy = Ey;
+		Cz = Ez+Cos(th_fps);
+	}
+    
+
+
+    gluLookAt(Ex,Ey,Ez, Cx,Cy,Cz , 0,1,0);
+    
+    //Reset dx,dy,dz so it doesnt continuously calcualte movement
+    dx=0;
+    dy=0;
+    dz=0;
+
     printf("left: %f\n",left);
     printf("head_height: %f\n",head_height);
     printf("fwd: %f\n",fwd);
@@ -375,6 +423,34 @@ void display()
    switch (mode){
    		//Mode 0 Orthogonal
    		case 0:
+   			//Move left/right
+			if(dx != 0){
+				th_fps += dx;
+				Cx = Ex+Sin(th_fps); 
+				Cy = Ey;
+				Cz = Ez+Cos(th_fps);
+			}
+			else if ( dx ==0 && dy==0 && dz == 0){
+				
+			}
+			else{
+				
+				//double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
+				//double Ey = +2*dim        *Sin(ph_fps);
+
+				//New Eye position
+				Ex += .1*Sin(th_fps);
+				//Ey += .1*dy;
+				Ez += .3*Cos(th_fps);
+
+				Cx = Ex+Sin(th_fps); 
+				Cy = Ey;
+				Cz = Ez+Cos(th_fps);
+			}
+			dx=0;
+			dy=0;
+			dz=0;
+
    			glRotatef(ph,1,0,0);
       		glRotatef(th,0,1,0);
       		break;
@@ -385,14 +461,19 @@ void display()
       	case 2:
       		//Mode 2 FPS POV 	
      		FPSEyeCalculation();
-     		glTranslated(-left,.2,-fwd);
-     		glRotatef(th_fps,0,1.0f,0); 
+     		//glTranslated(-left,.2,-fwd);
+     		//glRotatef(th_fps,0,1.0f,0); 
      		   
      		break;
    }
 
    
-	cube(left,head_height,fwd,.1,.1,.1,0);
+	cube(Ex,Ey,Ez,.1,.1,.1,th_fps);
+	glColor3f(0,1,0);
+    glBegin(GL_LINES);
+    glVertex3f(Ex,Ey,Ez);
+    glVertex3f(Cx,Cy,Cz);
+    glEnd();
    
 
    //  Draw stars
@@ -451,7 +532,7 @@ void display()
    	
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",mode,th,ph,dim,fov,modeTitles[mode],th_fps,ph_fps,left,fwd);
+   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",mode,th,ph,dim,fov,modeTitles[mode],th_fps,ph_fps,Ex,Ez);
    //  Render the scene and make it visible
    glFlush();
    glutSwapBuffers();
@@ -537,27 +618,31 @@ void key(unsigned char ch,int x,int y)
    //if(mode == 2){
    if (ch == 'w'){
 
-      fwd += 0.1;
-      //fwd += 0.1*Cos(th_fps);
-  	  //left += 0.1*Sin(th_fps);	
+      //fwd += 0.1;
+      dx = 0;
+      dy = 0;
+      dz = -1;
    }
    //  back
    else if (ch == 's') {
 
- 	  fwd -= 0.1;
- 	  //fwd += 0.1*Cos(th_fps+180);
- 	  //left += 0.1*Sin(th_fps+180); 
+ 	  //fwd -= 0.1;
+ 	  dx = 0;
+      dy = 0;
+      dz = 1;
    }
    //  Toggle axes
    else if (ch == 'a'){
-      left += 0.1;
-	  //left += 0.1*Cos(th_fps+270);
- 	  //fwd += 0.1*Sin(th_fps+270);
+      //left += 0.1;
+	  dx = -1;
+      dy = 0;
+      dz = 0;
    }
    else if (ch == 'd') {
-      left -= 0.1 ;
-      //fwd += 0.1*Sin(th_fps+90);
-      //left += 0.1*Cos(th_fps+90);	
+      //left -= 0.1 ;
+      dx = 1;
+      dy = 0;
+      dz = 0;
     }	
    //}
 
