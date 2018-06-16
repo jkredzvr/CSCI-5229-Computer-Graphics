@@ -13,6 +13,7 @@
  *  ESC        Exit
  */
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
@@ -46,14 +47,17 @@ double Ex = 0;
 double Ey = 0;
 double Ez = 0;
 
+//Camera Look at Position
 double Cx = 0;
 double Cy = 0;
 double Cz = -1;
 
-//position want to move
+//Delta Position (distance moving to )
 double dx = 0;
 double dy = 0;
 double dz = 0;
+
+bool left_right = false;
 
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
 StarPos StarPosArr[] = {
@@ -364,11 +368,12 @@ void FPSEyeCalculation()
     //double Ez = +2*dim*Cos(th_fps)*Cos(ph_fps);
     
     //Move Left or Right, just update the camera look at postion
-    if(dx != 0){
+    if(left_right){
 		th_fps += dx;
 		Cx = Ex+Sin(th_fps); 
 		Cy = Ey;
 		Cz = Ez+Cos(th_fps);
+		left_right = false;
 	}
 	else if ( dx ==0 && dy==0 && dz == 0){
 		
@@ -379,9 +384,9 @@ void FPSEyeCalculation()
 		//double Ey = +2*dim        *Sin(ph_fps);
 
 		//New Eye position
-		Ex += .1*Sin(th_fps);
+		Ex += dx;
 		//Ey += .1*dy;
-		Ez += .1*Cos(th_fps);
+		Ez += dz;
 
 		Cx = Ex+Sin(th_fps); 
 		Cy = Ey;
@@ -424,11 +429,12 @@ void display()
    		//Mode 0 Orthogonal
    		case 0:
    			//Move left/right
-			if(dx != 0){
+			if(left_right){
 				th_fps += dx;
 				Cx = Ex+Sin(th_fps); 
 				Cy = Ey;
 				Cz = Ez+Cos(th_fps);
+				left_right = false;
 			}
 			else if ( dx ==0 && dy==0 && dz == 0){
 				
@@ -439,14 +445,15 @@ void display()
 				//double Ey = +2*dim        *Sin(ph_fps);
 
 				//New Eye position
-				Ex += .1*Sin(th_fps);
+				Ex += dx;
 				//Ey += .1*dy;
-				Ez += .3*Cos(th_fps);
+				Ez += dz;
 
 				Cx = Ex+Sin(th_fps); 
 				Cy = Ey;
 				Cz = Ez+Cos(th_fps);
 			}
+		    
 			dx=0;
 			dy=0;
 			dz=0;
@@ -619,27 +626,27 @@ void key(unsigned char ch,int x,int y)
    if (ch == 'w'){
 
       //fwd += 0.1;
-      dx = 0;
+      dx = 1*Sin(th_fps);
       dy = 0;
-      dz = -1;
+      dz = 1*Cos(th_fps);
    }
    //  back
    else if (ch == 's') {
 
  	  //fwd -= 0.1;
- 	  dx = 0;
+ 	  dx = -1*Sin(th_fps);
       dy = 0;
-      dz = 1;
+      dz = -1*Cos(th_fps);
    }
    //  Toggle axes
    else if (ch == 'a'){
-      //left += 0.1;
-	  dx = -1;
+      left_right = true;
+      dx = -1;
       dy = 0;
       dz = 0;
    }
    else if (ch == 'd') {
-      //left -= 0.1 ;
+      left_right = true;
       dx = 1;
       dy = 0;
       dz = 0;
