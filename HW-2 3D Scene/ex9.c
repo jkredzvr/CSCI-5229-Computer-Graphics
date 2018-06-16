@@ -41,6 +41,20 @@ int ph_fps=0;     //  Elevation of view angle
 double head_height = 0.2; //Position of eye level
 char* modeTitles[]= {"Orthogonal","Perspective","FPS"}; 
 
+typedef struct {double x,y,z,zhSpinRate;} StarPos;
+StarPos StarPosArr[] = {
+   {1, 2.4, -1,10},
+   {2, 2.4, -2,10},
+   {2, 2.4, -5,10},
+   {4, 2.4, -6,10},
+   {6, 2.4, -8,10},
+   {4, 2.4, -1.5,10},
+
+   {-2.2, 2.4, -.2,8},
+   {-3.2, 2.4, 1.2,20},
+   {3.1, 2.4, -.5,-2},
+   };
+
 
 //  Macro for sin & cos in degrees
 #define Cos(th) cos(3.1415927/180*(th))
@@ -340,6 +354,10 @@ void FPSEyeCalculation()
     printf("fwd: %f\n",fwd);
 }
 
+void GenerateStarMatrix(){
+
+}
+
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
@@ -367,8 +385,8 @@ void display()
       	case 2:
       		//Mode 2 FPS POV 	
      		FPSEyeCalculation();
-     		glRotatef(th_fps,0,1.0f,0); 
      		glTranslated(-left,.2,-fwd);
+     		glRotatef(th_fps,0,1.0f,0); 
      		   
      		break;
    }
@@ -378,14 +396,22 @@ void display()
    
 
    //  Draw stars
-   for (i=0;i<=2;i++) {
-   		double x = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
-   		double z = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
-   		double y = rand() % (int)(dim*.8 - dim*.7) + (dim*.7);
-   		printf("%f",z);
-   		printf("%f",x);
-   		star(x,0,0 , 0.02,0.02,0.02 , zh);
+   for (i=0;i<=8;i++) {
+   		//double x = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
+   		//double z = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
+   		//double y = rand() % (int)(dim*.8 - dim*.7) + (dim*.7);
+   		//printf("%f",z);
+   		//printf("%f",x);
+   		star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.2,0.2,0.2 , zh*StarPosArr[i].zhSpinRate);
    }
+
+  for (i=-1;i<=1;i++)
+  	for (j=-1;j<=1;j++)
+    	for (k=-1;k<=1;k++)
+        	cube(i,j,k , 0.1,0.1,0.1 , 0);
+
+
+
 
    //  Draw axes
    glColor3f(1,1,1);
@@ -510,22 +536,28 @@ void key(unsigned char ch,int x,int y)
    //Mode 2 == FPS for WASD movement controls
    //if(mode == 2){
    if (ch == 'w'){
-      fwd += 0.1*Cos(th_fps);
-  	  left += 0.1*Sin(th_fps);	
+
+      fwd += 0.1;
+      //fwd += 0.1*Cos(th_fps);
+  	  //left += 0.1*Sin(th_fps);	
    }
    //  back
    else if (ch == 's') {
- 	  fwd += 0.1*Cos(th_fps+180);
- 	  left += 0.1*Sin(th_fps+180); 
+
+ 	  fwd -= 0.1;
+ 	  //fwd += 0.1*Cos(th_fps+180);
+ 	  //left += 0.1*Sin(th_fps+180); 
    }
    //  Toggle axes
    else if (ch == 'a'){
- 	  fwd += 0.1*Sin(th_fps+270);
-      left += 0.1*Cos(th_fps+270);
+      left += 0.1;
+	  //left += 0.1*Cos(th_fps+270);
+ 	  //fwd += 0.1*Sin(th_fps+270);
    }
    else if (ch == 'd') {
-      fwd += 0.1*Sin(th_fps+90);
-      left += 0.1*Cos(th_fps+90);	
+      left -= 0.1 ;
+      //fwd += 0.1*Sin(th_fps+90);
+      //left += 0.1*Cos(th_fps+90);	
     }	
    //}
 
@@ -569,6 +601,8 @@ int main(int argc,char* argv[])
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    glutInitWindowSize(600,600);
    glutCreateWindow("Projections");
+
+   GenerateStarMatrix();
    //  Set callbacks
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
