@@ -1,5 +1,5 @@
-# Example 8
-EXE=ex8 ex9
+#HW2
+EXE=hw2
 
 # Main target
 all: $(EXE)
@@ -30,9 +30,7 @@ endif
 	g++ -c $(CFLG) $<
 
 #  Link
-ex8:ex8.o
-	gcc -O3 -o $@ $^   $(LIBS)
-ex9:ex9.o
+hw2:hw2.o
 	gcc -O3 -o $@ $^   $(LIBS)
 
 #  Clean
