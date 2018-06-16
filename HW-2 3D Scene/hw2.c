@@ -7,11 +7,15 @@
  	3rd perspective first person view on the ground
  *
  *  Key bindings:
- *  m          Toggle between perspective and orthogonal
+ *  m          Toggle between View mode, perspective, orthogonal, First Person (FPS)
  *  +/-        Changes field of view for perspective
- *  a          Toggle axes
- *  arrows     Change view angle
- *  PgDn/PgUp  Zoom in and out
+ *  1          Toggle axes
+ *  arrows     Change view angle in View 1 and 2
+ 	w          Move first person controller forward
+ 	a          Turn first person controller left
+ 	s 		   Move first person controller back
+ 	d 		   Turn first person controller right
+ *  PgDn/PgUp  Zoom in and out in View 1 and 2
  *  0          Reset view angle
  *  ESC        Exit
  */
@@ -72,6 +76,7 @@ double dz = 0;
 
 bool left_right = false;
 double rotationSpeed =2;
+double moveSpeed = .05;
 
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
 StarPos StarPosArr[] = {
@@ -129,7 +134,8 @@ static void Project()
     	//Mode 1 == PerspectiveView
    		case 1:
      		gluPerspective(fov,asp,dim/4,4*dim);
-     		break;		
+     		break;	
+     	// FPS Perspective mode		
       	case 2:
      		gluPerspective(fov,asp,dim/4,4*dim);
      		break;
@@ -376,6 +382,38 @@ void PerspectiveEyeCalculation()
     gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
 }
 
+void FPSMovement(){
+	//Move Left or Right, just update the camera look at postion
+    if(left_right){
+    	//update rotation around the eye position
+		th_fps -= dx*rotationSpeed;
+		//update look at position
+		Cx = Ex+Sin(th_fps); 
+		Cy = Ey;
+		Cz = Ez+Cos(th_fps);
+		//return back the state
+		left_right = false;
+	}
+	else if ( dx ==0 && dy==0 && dz == 0){
+		// no translation then continue
+	}
+	else{
+		//New Eye position
+		Ex += moveSpeed*dx;
+		Ez += moveSpeed*dz;
+
+		//Update position being looked at
+		Cx = Ex+moveSpeed*Sin(th_fps); 
+		Cy = Ey;
+		Cz = Ez+moveSpeed*Cos(th_fps);
+	}
+	//Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
+    dx=0;
+    dy=0;
+    dz=0;
+    
+}
+
 void FPSEyeCalculation()
 {
     //Move Left or Right, just update the camera look at postion
@@ -394,8 +432,8 @@ void FPSEyeCalculation()
 	}
 	else{
 		//New Eye position
-		Ex += dx;
-		Ez += dz;
+		Ex += dx*moveSpeed;
+		Ez += dz*moveSpeed;
 
 		//Update position being looked at
 		Cx = Ex+Sin(th_fps); 
@@ -434,44 +472,18 @@ void display()
    		//Mode 0 Orthogonal
    		case 0:
    			//Move left/right
-			if(left_right){
-				th_fps += dx;
-				Cx = Ex+Sin(th_fps); 
-				Cy = Ey;
-				Cz = Ez+Cos(th_fps);
-				left_right = false;
-			}
-			else if ( dx ==0 && dy==0 && dz == 0){
-				
-			}
-			else{
-				
-				//double Ex = -2*dim*Sin(th_fps)*Cos(ph_fps);
-				//double Ey = +2*dim        *Sin(ph_fps);
-
-				//New Eye position
-				Ex += dx;
-				//Ey += .1*dy;
-				Ez += dz;
-
-				Cx = Ex+Sin(th_fps); 
-				Cy = Ey;
-				Cz = Ez+Cos(th_fps);
-			}
-		    
-			dx=0;
-			dy=0;
-			dz=0;
-
+			FPSMovement();
    			glRotatef(ph,1,0,0);
       		glRotatef(th,0,1,0);
       		break;
    		//Mode 1 == Perspective Orbital View	
    		case 1:
+   			FPSMovement();
 			PerspectiveEyeCalculation();
 			break;
       	case 2:
-      		//Mode 2 FPS POV 	
+      		//Mode 2 FPS POV
+      		FPSMovement(); 	
      		FPSEyeCalculation();
      		//glTranslated(-left,.2,-fwd);
      		//glRotatef(th_fps,0,1.0f,0); 
@@ -693,7 +705,7 @@ int main(int argc,char* argv[])
    //  Request double buffered, true color window with Z buffering at 600x600
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    glutInitWindowSize(600,600);
-   glutCreateWindow("Projections");
+   glutCreateWindow("Assignment2: Justin Chin");
 
    GenerateStarMatrix();
    //  Set callbacks
