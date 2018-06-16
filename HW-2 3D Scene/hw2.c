@@ -555,8 +555,11 @@ void display()
 
    	
    //  Display parameters
+   glWindowPos2i(5,20);
+   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d",mode,th,ph,dim,fov);
    glWindowPos2i(5,5);
-   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",mode,th,ph,dim,fov,modeTitles[mode],th_fps,ph_fps,Ex,Ez);
+   Print("Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",modeTitles[mode],th_fps,ph_fps,Ex,Ez);
+   
    //  Render the scene and make it visible
    glFlush();
    glutSwapBuffers();
