@@ -84,6 +84,9 @@ int numStars = 400;
 #define Cos(th) cos(3.1415927/180*(th))
 #define Sin(th) sin(3.1415927/180*(th))
 
+
+
+
 /*
  *  Convenience routine to output raster text
  *  Use VARARGS to make this more flexible
@@ -133,6 +136,12 @@ static void Project()
    //  Undo previous transformations
    glLoadIdentity();
 }
+
+static double randDouble(double start, double end){
+	int val = (rand() % (int)(end*100 - start*100) ) + (start*100);
+	return val/100.0;
+}
+
 
 /*
  *  Draw a cube
@@ -527,14 +536,14 @@ void GenerateStarMatrix(){
 	StarPosArr = malloc(numStars*sizeof(StarPos));
 	
 	for(int i=0; i<numStars; i++) {
-		double x = rand() % (int)(dim*2 - (-dim*2)) + (-dim*2);
-		double z = rand() % (int)(dim*2 - (-dim*2)) + (-dim*2);
+		double x = randDouble(-dim,dim);
+		double z = randDouble(-dim,dim);
 
 		double scaled = (double)rand()/RAND_MAX;
-        double y = (1.5 - 1.1 +1)*scaled + 1.1;
+        double y = randDouble(1.1,1.5);
 
    		//double y = rand() % (int)((dim*.8) - (dim*.7)) + (dim*.7);
-   		double rot = rand() % (int)(10.0 - 2.0) + (2.0);
+   		double rot = randDouble(2,10);
 		StarPos a ={x,y,z,rot};
 		StarPosArr[i] = a ;
 	}
