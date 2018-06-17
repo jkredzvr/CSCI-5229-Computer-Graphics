@@ -46,9 +46,7 @@ double asp=1;     //  Aspect ratio
 //Overhead Size of world control
 double dim=5.0;   //  Size of world
 
-
 double zh=0;      //  Rotation variable of stars
-
 
 char* modeTitles[]= {"Orthogonal","Perspective","FPS"}; 
 
@@ -79,19 +77,8 @@ double rotationSpeed =2;
 double moveSpeed = .05;
 
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
-StarPos StarPosArr[] = {
-   {1, 1.1, -1,10},
-   {2, 1.1, -2,10},
-   {2, 1.1, -5,10},
-   {4, 1.1, -6,10},
-   {6, 1.1, -8,10},
-   {4, 1.1, -1.5,10},
-
-   {-2.2, 1.1, -.2,8},
-   {-3.2, 1.1, 1.2,20},
-   {3.1, 1.1, -.5,-2},
-};
-
+StarPos *StarPosArr; 
+int numStars = 400;
 
 //  Macro for sin & cos in degrees
 #define Cos(th) cos(3.1415927/180*(th))
@@ -197,6 +184,60 @@ static void cube(double x,double y,double z,
    glVertex3f(-1,+1,-1);
    //  Bottom
    glColor4f(1,0,1,.1);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(+1,-1,+1);
+   glVertex3f(-1,-1,+1);
+   //  End
+   glEnd();
+   //  Undo transofrmations
+   glPopMatrix();
+}
+
+static void cube_colored(double x,double y,double z,
+                 double dx,double dy,double dz,
+                 double th, double r, double g, double b)
+{
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,y,z);
+   glRotated(th,0,1,0);
+   glScaled(dx,dy,dz);
+   //  Cube
+   glBegin(GL_QUADS);
+   //  Front
+   glColor4f(r,g,b,1);
+   glVertex3f(-1,-1, 1);
+   glVertex3f(+1,-1, 1);
+   glVertex3f(+1,+1, 1);
+   glVertex3f(-1,+1, 1);
+   //  Back
+   glColor4f(r,g,b,1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,+1,-1);
+   glVertex3f(+1,+1,-1);
+   //  Right
+   glColor4f(r,g,b,1);
+   glVertex3f(+1,-1,+1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(+1,+1,-1);
+   glVertex3f(+1,+1,+1);
+   //  Left
+   glColor4f(r,g,b,1);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,-1,+1);
+   glVertex3f(-1,+1,+1);
+   glVertex3f(-1,+1,-1);
+   //  Top
+   glColor4f(r,g,b,1);
+   glVertex3f(-1,+1,+1);
+   glVertex3f(+1,+1,+1);
+   glVertex3f(+1,+1,-1);
+   glVertex3f(-1,+1,-1);
+   //  Bottom
+   glColor4f(r,g,b,1);
    glVertex3f(-1,-1,-1);
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,-1,+1);
@@ -371,6 +412,74 @@ static void star(double x,double y,double z,
    glPopMatrix();
 }
 
+/*
+ *  Draw vertex in polar coordinates
+ */
+static void Vertex(double th,double ph)
+{
+   glColor3f(1,.8,.6);
+   glVertex3d(Sin(th)*Cos(ph) , Sin(ph) , Cos(th)*Cos(ph));
+}
+
+
+static void sphere1(double x,double y,double z,double r)
+{
+   const int d=5;
+   int th,ph;
+
+   //  Save transformation
+   glPushMatrix();
+   //  Offset and scale
+   glTranslated(x,y,z);
+   glScaled(r,r,r);
+
+   //  South pole cap
+   glBegin(GL_TRIANGLE_FAN);
+   Vertex(0,-90);
+   for (th=0;th<=360;th+=d)
+   {
+      Vertex(th,d-90);
+   }
+   glEnd();
+
+   //  Latitude bands
+   for (ph=d-90;ph<=90-2*d;ph+=d)
+   {
+      glBegin(GL_QUAD_STRIP);
+      for (th=0;th<=360;th+=d)
+      {
+         Vertex(th,ph);
+         Vertex(th,ph+d);
+      }
+      glEnd();
+   }
+
+   //  North pole cap
+   glBegin(GL_TRIANGLE_FAN);
+   Vertex(0,90);
+   for (th=0;th<=360;th+=d)
+   {
+      Vertex(th,90-d);
+   }
+   glEnd();
+
+   //  Undo transformations
+   glPopMatrix();
+}
+
+static void DrawPerson(){
+	//person marker
+	cube_colored(Ex,.1,Ez,.05,.1,.05,th_fps,.4,0,1.0);
+	//Object Look at Vector
+	glColor3f(0,1,0);
+    glBegin(GL_LINES);
+    glVertex3f(Ex,head_height,Ez);
+    glVertex3f(Cx,head_height,Cz);
+    glEnd();
+
+    sphere1(Ex,head_height,Ez,.1);
+}
+
 //View 2 Perspective - Fixed position Eye position (orbiting around) the center (object position == orgin)
 void PerspectiveEyeCalculation()
 {
@@ -396,7 +505,7 @@ void FPSMovement(){
 		Ex += moveSpeed*dx;
 		Ez += moveSpeed*dz;
 	}
-	
+
 	Cx = Ex+Sin(th_fps); 
 	Cy = Ey+Sin(ph_fps);
 	Cz = Ez+Cos(th_fps);
@@ -410,46 +519,25 @@ void FPSMovement(){
 
 void FPSEyeCalculation()
 {
-	/*
-    //Move Left or Right, just update the camera look at postion
-    if(left_right){
-    	//update rotation around the eye position
-		//th_fps -= dx*rotationSpeed;
-		//update look at position
-		Cx = Ex+Sin(th_fps); 
-		Cy = Ey;
-		Cz = Ez+Cos(th_fps);
-		//return back the state
-		//left_right = false;
-	}
-	else if ( dx ==0 && dy==0 && dz == 0){
-		// no translation then continue
-	}
-	else{
-		//New Eye position
-		Ex += dx*moveSpeed;
-		Ez += dz*moveSpeed;
-
-		//Update position being looked at
-		Cx = Ex+Sin(th_fps); 
-		Cy = Ey;
-		Cz = Ez+Cos(th_fps);
-	}
-	*/
-
-	
-    
     gluLookAt(Ex,Ey,Ez, Cx,Cy,Cz , 0,1,0);
-    
-    //Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
-    //dx=0;
-    //dy=0;
-    //dz=0;
-
 }
 
 void GenerateStarMatrix(){
+	
+	StarPosArr = malloc(numStars*sizeof(StarPos));
+	
+	for(int i=0; i<numStars; i++) {
+		double x = rand() % (int)(dim*2 - (-dim*2)) + (-dim*2);
+		double z = rand() % (int)(dim*2 - (-dim*2)) + (-dim*2);
 
+		double scaled = (double)rand()/RAND_MAX;
+        double y = (1.5 - 1.1 +1)*scaled + 1.1;
+
+   		//double y = rand() % (int)((dim*.8) - (dim*.7)) + (dim*.7);
+   		double rot = rand() % (int)(10.0 - 2.0) + (2.0);
+		StarPos a ={x,y,z,rot};
+		StarPosArr[i] = a ;
+	}
 }
 
 /*
@@ -488,30 +576,20 @@ void display()
      		break;
    }
 
-    //person marker
-	cube(Ex,Ey,Ez,.1,.1,.1,th_fps);
-	//Object Look at Vector
-	glColor3f(0,1,0);
-    glBegin(GL_LINES);
-    glVertex3f(Ex,Ey,Ez);
-    glVertex3f(Cx,Cy,Cz);
-    glEnd();
+   DrawPerson();
+    
+
+
    
 
    //  Draw stars
-   for (i=0;i<=8;i++) {
-   		//double x = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
-   		//double z = rand() % (int)(dim/2 - (-dim/2)) + (-dim/2);
-   		//double y = rand() % (int)(dim*.8 - dim*.7) + (dim*.7);
-   		//printf("%f",z);
-   		//printf("%f",x);
+   for (i=0;i<=numStars;i++) {
    		star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.02,0.02,0.02 , zh*StarPosArr[i].zhSpinRate);
    }
 
   for (i=-1;i<=1;i++)
-  	for (j=-1;j<=1;j++)
     	for (k=-1;k<=1;k++)
-        	cube(i,j,k , 0.1,0.1,0.1 , 0);
+        	cube(i,.1,k , 0.1,0.1,0.1 , 0);
 
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1,1);
@@ -581,32 +659,32 @@ void special(int key,int x,int y)
 	if(mode != 2){
 	   //  Right arrow key - increase angle by 5 degrees
 	   if (key == GLUT_KEY_RIGHT)
-	      th += 5;
+	      th += rotationSpeed;
 	   //  Left arrow key - decrease angle by 5 degrees
 	   else if (key == GLUT_KEY_LEFT)
-	      th -= 5;
+	      th -= rotationSpeed;
 	   //  Up arrow key - increase elevation by 5 degrees
 	   else if (key == GLUT_KEY_UP){
-	      ph += 5;
+	      ph += rotationSpeed;
 	   }
 	   //  Down arrow key - decrease elevation by 5 degrees
 	   else if (key == GLUT_KEY_DOWN)
-	      ph -= 5;
+	      ph -= rotationSpeed;
 	   
 	}
 	else {
 		//  Right arrow key - increase angle by 5 degrees
 	   if (key == GLUT_KEY_RIGHT)
-	      th_fps -= 5;
+	      th_fps -= rotationSpeed;
 	   //  Left arrow key - decrease angle by 5 degrees
 	   else if (key == GLUT_KEY_LEFT)
-	      th_fps += 5;
+	      th_fps += rotationSpeed;
 	   //  Up arrow key - increase elevation by 5 degrees
 	   else if (key == GLUT_KEY_UP)
-	      ph_fps += 5;
+	      ph_fps += rotationSpeed;
 	   //  Down arrow key - decrease elevation by 5 degrees
 	   else if (key == GLUT_KEY_DOWN)
-	      ph_fps -= 5;
+	      ph_fps -= rotationSpeed;
 	}		
    //  PageUp key - increase dim
    if (key == GLUT_KEY_PAGE_UP)
