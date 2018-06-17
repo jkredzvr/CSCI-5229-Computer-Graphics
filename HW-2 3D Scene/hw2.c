@@ -57,7 +57,7 @@ char* modeTitles[]= {"Orthogonal","Perspective","FPS"};
 int th_fps=0;     //  Azimuth of view angle
 int ph_fps=0;     //  Elevation of view angle
 
-double head_height = 0.2; //Position of eye level
+double head_height = 0.3; //Position of eye level
 
 //Eye Position
 double Ex = 0;
@@ -80,17 +80,17 @@ double moveSpeed = .05;
 
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
 StarPos StarPosArr[] = {
-   {1, 2.4, -1,10},
-   {2, 2.4, -2,10},
-   {2, 2.4, -5,10},
-   {4, 2.4, -6,10},
-   {6, 2.4, -8,10},
-   {4, 2.4, -1.5,10},
+   {1, 1.1, -1,10},
+   {2, 1.1, -2,10},
+   {2, 1.1, -5,10},
+   {4, 1.1, -6,10},
+   {6, 1.1, -8,10},
+   {4, 1.1, -1.5,10},
 
-   {-2.2, 2.4, -.2,8},
-   {-3.2, 2.4, 1.2,20},
-   {3.1, 2.4, -.5,-2},
-   };
+   {-2.2, 1.1, -.2,8},
+   {-3.2, 1.1, 1.2,20},
+   {3.1, 1.1, -.5,-2},
+};
 
 
 //  Macro for sin & cos in degrees
@@ -137,7 +137,7 @@ static void Project()
      		break;	
      	// FPS Perspective mode		
       	case 2:
-     		gluPerspective(fov,asp,dim/4,4*dim);
+     		gluPerspective(30,asp,.1*dim,4*dim);
      		break;
    }
    
@@ -337,8 +337,6 @@ static void star(double x,double y,double z,
    glVertex3f( 1.8, -2.7, 0.0);
    glVertex3f( 0.0, -1.0, 0.0);
    glEnd();
-
-
    // bottomleft-left
    glColor3f(1,1,0);
    glBegin(GL_POLYGON);
@@ -387,10 +385,6 @@ void FPSMovement(){
     if(left_right){
     	//update rotation around the eye position
 		th_fps -= dx*rotationSpeed;
-		//update look at position
-		Cx = Ex+Sin(th_fps); 
-		Cy = Ey;
-		Cz = Ez+Cos(th_fps);
 		//return back the state
 		left_right = false;
 	}
@@ -401,12 +395,12 @@ void FPSMovement(){
 		//New Eye position
 		Ex += moveSpeed*dx;
 		Ez += moveSpeed*dz;
-
-		//Update position being looked at
-		Cx = Ex+moveSpeed*Sin(th_fps); 
-		Cy = Ey;
-		Cz = Ez+moveSpeed*Cos(th_fps);
 	}
+	
+	Cx = Ex+Sin(th_fps); 
+	Cy = Ey+Sin(ph_fps);
+	Cz = Ez+Cos(th_fps);
+
 	//Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
     dx=0;
     dy=0;
@@ -416,16 +410,17 @@ void FPSMovement(){
 
 void FPSEyeCalculation()
 {
+	/*
     //Move Left or Right, just update the camera look at postion
     if(left_right){
     	//update rotation around the eye position
-		th_fps -= dx*rotationSpeed;
+		//th_fps -= dx*rotationSpeed;
 		//update look at position
 		Cx = Ex+Sin(th_fps); 
 		Cy = Ey;
 		Cz = Ez+Cos(th_fps);
 		//return back the state
-		left_right = false;
+		//left_right = false;
 	}
 	else if ( dx ==0 && dy==0 && dz == 0){
 		// no translation then continue
@@ -440,13 +435,16 @@ void FPSEyeCalculation()
 		Cy = Ey;
 		Cz = Ez+Cos(th_fps);
 	}
+	*/
+
+	
     
     gluLookAt(Ex,Ey,Ez, Cx,Cy,Cz , 0,1,0);
     
     //Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
-    dx=0;
-    dy=0;
-    dz=0;
+    //dx=0;
+    //dy=0;
+    //dz=0;
 
 }
 
@@ -483,16 +481,16 @@ void display()
 			break;
       	case 2:
       		//Mode 2 FPS POV
+      		Ey=head_height;
+      		Cy=head_height;
       		FPSMovement(); 	
-     		FPSEyeCalculation();
-     		//glTranslated(-left,.2,-fwd);
-     		//glRotatef(th_fps,0,1.0f,0); 
-     		   
+     		FPSEyeCalculation();    		   
      		break;
    }
 
-   
+    //person marker
 	cube(Ex,Ey,Ez,.1,.1,.1,th_fps);
+	//Object Look at Vector
 	glColor3f(0,1,0);
     glBegin(GL_LINES);
     glVertex3f(Ex,Ey,Ez);
@@ -507,7 +505,7 @@ void display()
    		//double y = rand() % (int)(dim*.8 - dim*.7) + (dim*.7);
    		//printf("%f",z);
    		//printf("%f",x);
-   		star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.2,0.2,0.2 , zh*StarPosArr[i].zhSpinRate);
+   		star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.02,0.02,0.02 , zh*StarPosArr[i].zhSpinRate);
    }
 
   for (i=-1;i<=1;i++)
@@ -515,8 +513,17 @@ void display()
     	for (k=-1;k<=1;k++)
         	cube(i,j,k , 0.1,0.1,0.1 , 0);
 
-
-
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1,1);
+   //ground
+   glBegin(GL_QUADS);
+   glColor4f(.24,.47,.3,1);
+   glVertex3f(-dim/2,0,-dim/2);
+   glVertex3f(+dim/2,0,-dim/2);
+   glVertex3f(+dim/2,0,+dim/2);
+   glVertex3f(-dim/2,0,+dim/2);
+   glEnd();
+   glDisable(GL_POLYGON_OFFSET_FILL);
 
    //  Draw axes
    glColor3f(1,1,1);
@@ -579,8 +586,9 @@ void special(int key,int x,int y)
 	   else if (key == GLUT_KEY_LEFT)
 	      th -= 5;
 	   //  Up arrow key - increase elevation by 5 degrees
-	   else if (key == GLUT_KEY_UP)
+	   else if (key == GLUT_KEY_UP){
 	      ph += 5;
+	   }
 	   //  Down arrow key - decrease elevation by 5 degrees
 	   else if (key == GLUT_KEY_DOWN)
 	      ph -= 5;
@@ -589,10 +597,10 @@ void special(int key,int x,int y)
 	else {
 		//  Right arrow key - increase angle by 5 degrees
 	   if (key == GLUT_KEY_RIGHT)
-	      th_fps += 5;
+	      th_fps -= 5;
 	   //  Left arrow key - decrease angle by 5 degrees
 	   else if (key == GLUT_KEY_LEFT)
-	      th_fps -= 5;
+	      th_fps += 5;
 	   //  Up arrow key - increase elevation by 5 degrees
 	   else if (key == GLUT_KEY_UP)
 	      ph_fps += 5;
