@@ -1,40 +1,29 @@
-# Justin Chin HW 1-Lorenz Attractor
+# Justin Chin HW 2-3D Scene
 CSCI 5229 Computer Graphics
-
-### Assignment Requirements
-At a minimum: ( get a simple scene rendered and basic user interaction)
-
-- provide a line trace of the sequence of attractor
-- allow the trace to be viewed from different positions 
-- allow one or more of the parameters in the Lorenz equations to be modified interactively
-
----
 
 ### Application Instructions
 #### How to change the view
+     
+     
+* Press m key to cycle through 3 views
+    1. view perspective view shows overhead view
+    2. perspective first person view on the ground
+    3. perspective first person view on the ground (First Person Mode)
+* Pressing the arrows changes the pitch and yaw view angle of the 3D scene in view 1 and 2.
+* +/-        Changes field of view for perspective during perspective mode
+* Press 1 to turn on and off the x,y,z axis
+* PgDn/PgUp  Zoom in and out in View 1 and 2
+ 
 
-* Press 1 key to view  (1) Lorenz Attractor 
-* Press 2 key to view(2) Lorenz Attractors w/ modifable 2nd Lorenz initial conditions
-* Pressing the arrows changes the pitch and yaw  view angle
-* Press 0 to reset view angle
+#### How to move position and view angle during first person mode
+* w : Move fowards
+* s : Move backwards
+* a : Turn left
+* d : Turn right
+* Arrow keys - move up and down the point of view angle
 
 #### Exiting the Application
 * Press ESC to exit the application
 
-#### How to change Lorenz Attractor Parameters
-In view 1 and 2, press the following keys to 
-
-* o/p - Decrease/Increase s Lorenz Attractor parameter
-* k/l - Decrease/Increase b Lorenz Attractor parameter
-* n/m - Decrease/Increase r Lorenz Attractor parameter
-
-
-### How to change Lorenz Attractor initial conditions (x,y,z)
-In view 2 (viewing two Lorenz Attractors) press the following keys to  
-
-* q/w - Decrease/Increase x intial coordinate for 2nd Lorenz Attractor 
-* a/s - Decrease/Increase y intial coordinate for 2nd Lorenz Attractor
-* z/x - Decrease/Increase z intial coordinate for 2nd Lorenz Attractor
-
 ### Estimated time of finishing assignment
-- 4 hrs programming
+- 16 hrs programming
