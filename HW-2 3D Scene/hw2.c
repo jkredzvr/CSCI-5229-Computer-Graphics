@@ -1,5 +1,5 @@
 /*
- *  Projections
+ *  HW2
  *
  *  Draws stars in the sky
  	1st (orthogonal) view shows overhead view
@@ -8,7 +8,7 @@
  *
  *  Key bindings:
  *  m          Toggle between View mode, perspective, orthogonal, First Person (FPS)
- *  +/-        Changes field of view for perspective
+ *  +/-        Changes field of view for perspective during perspective
  *  1          Toggle axes
  *  arrows     Change view angle in View 1 and 2
  	w          Move first person controller forward
@@ -77,14 +77,16 @@ double rotationSpeed =2;
 double moveSpeed = .05;
 
 typedef struct {double x,y,z,zhSpinRate;} StarPos;
-StarPos *StarPosArr; 
-int numStars = 400;
+StarPos *StarPosArr;
+StarPos *CubePosArr; 
+
+
+int numStars = 500;
+int numCubes = 10;
 
 //  Macro for sin & cos in degrees
 #define Cos(th) cos(3.1415927/180*(th))
 #define Sin(th) sin(3.1415927/180*(th))
-
-
 
 
 /*
@@ -536,16 +538,28 @@ void GenerateStarMatrix(){
 	StarPosArr = malloc(numStars*sizeof(StarPos));
 	
 	for(int i=0; i<numStars; i++) {
-		double x = randDouble(-dim,dim);
-		double z = randDouble(-dim,dim);
-
-		double scaled = (double)rand()/RAND_MAX;
+		double x = randDouble(-dim*2,dim*2);
+		double z = randDouble(-dim*2,dim*2);
         double y = randDouble(1.1,1.5);
 
-   		//double y = rand() % (int)((dim*.8) - (dim*.7)) + (dim*.7);
    		double rot = randDouble(2,10);
 		StarPos a ={x,y,z,rot};
 		StarPosArr[i] = a ;
+	}
+}
+
+void GenerateCubeMatrix(){
+	
+	CubePosArr = malloc(numCubes*sizeof(StarPos));
+	
+	for(int i=0; i<numCubes; i++) {
+		double x = randDouble(-dim/2*.7,dim/2*.7);
+		double z = randDouble(-dim/2*.7,dim/2*.7);
+		double y = randDouble(.05,1.0);
+		double rot = randDouble(0,360);
+
+		StarPos a ={x,y,z,rot};
+		CubePosArr[i] = a ;
 	}
 }
 
@@ -554,7 +568,7 @@ void GenerateStarMatrix(){
  */
 void display()
 {
-   int i,j,k;
+   int i;
    const double len=1.5;  //  Length of axes
    //  Erase the window and the depth buffer
    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -586,77 +600,73 @@ void display()
    }
 
    DrawPerson();
-    
 
+	//  Draw stars
+	for (i=0;i<=numStars;i++) {
+			star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.01,0.01,0.01 , zh*StarPosArr[i].zhSpinRate);
+	}
+	// Draw Cubes   
+	for (i=0;i<=numCubes;i++){
+		cube(CubePosArr[i].x,CubePosArr[i].y,CubePosArr[i].z, 0.1,0.1,0.1, CubePosArr[i].zhSpinRate);
+	}
 
-   
+	//ground
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset(1,1);
+	glBegin(GL_QUADS);
+	glColor4f(.24,.47,.3,1);
+	glVertex3f(-dim/2,0,-dim/2);
+	glVertex3f(+dim/2,0,-dim/2);
+	glVertex3f(+dim/2,0,+dim/2);
+	glVertex3f(-dim/2,0,+dim/2);
+	glEnd();
+	glDisable(GL_POLYGON_OFFSET_FILL);
 
-   //  Draw stars
-   for (i=0;i<=numStars;i++) {
-   		star(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , 0.02,0.02,0.02 , zh*StarPosArr[i].zhSpinRate);
-   }
+	//  Draw axes
+	glColor3f(1,1,1);
+	if (axes)
+	{
+	  glBegin(GL_LINES);
+	  glVertex3d(0.0,0.0,0.0);
+	  glVertex3d(len,0.0,0.0);
+	  glVertex3d(0.0,0.0,0.0);
+	  glVertex3d(0.0,len,0.0);
+	  glVertex3d(0.0,0.0,0.0);
+	  glVertex3d(0.0,0.0,len);
+	  glEnd();
 
-  for (i=-1;i<=1;i++)
-    	for (k=-1;k<=1;k++)
-        	cube(i,.1,k , 0.1,0.1,0.1 , 0);
-
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1,1);
-   //ground
-   glBegin(GL_QUADS);
-   glColor4f(.24,.47,.3,1);
-   glVertex3f(-dim/2,0,-dim/2);
-   glVertex3f(+dim/2,0,-dim/2);
-   glVertex3f(+dim/2,0,+dim/2);
-   glVertex3f(-dim/2,0,+dim/2);
-   glEnd();
-   glDisable(GL_POLYGON_OFFSET_FILL);
-
-   //  Draw axes
-   glColor3f(1,1,1);
-   if (axes)
-   {
-      glBegin(GL_LINES);
-      glVertex3d(0.0,0.0,0.0);
-      glVertex3d(len,0.0,0.0);
-      glVertex3d(0.0,0.0,0.0);
-      glVertex3d(0.0,len,0.0);
-      glVertex3d(0.0,0.0,0.0);
-      glVertex3d(0.0,0.0,len);
-      glEnd();
-
-      	//Grid surface
-      glBegin(GL_LINES);	
-      for(i=-dim/2;i<=dim/2;i++){
-  		glVertex3d(i,0.0,-dim/2);
+	  	//Grid surface
+	  glBegin(GL_LINES);	
+	  for(i=-dim/2;i<=dim/2;i++){
+			glVertex3d(i,0.0,-dim/2);
 		glVertex3d(i,0.0,dim/2);
-      }
+	  }
 		
-      for(i=-dim/2;i<=dim/2;i++){
+	  for(i=-dim/2;i<=dim/2;i++){
 		glVertex3d(-dim/2,0.0,i);
 		glVertex3d(dim/2,0.0,i);
 	  }		
-      glEnd();
+	  glEnd();
 
-      //  Label axes
-      glRasterPos3d(len,0.0,0.0);
-      Print("X");
-      glRasterPos3d(0.0,len,0.0);
-      Print("Y");
-      glRasterPos3d(0.0,0.0,len);
-      Print("Z");
-   }
+	  //  Label axes
+	  glRasterPos3d(len,0.0,0.0);
+	  Print("X");
+	  glRasterPos3d(0.0,len,0.0);
+	  Print("Y");
+	  glRasterPos3d(0.0,0.0,len);
+	  Print("Z");
+	}
 
    	
-   //  Display parameters
-   glWindowPos2i(5,20);
-   Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d",mode,th,ph,dim,fov);
-   glWindowPos2i(5,5);
-   Print("Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",modeTitles[mode],th_fps,ph_fps,Ex,Ez);
-   
-   //  Render the scene and make it visible
-   glFlush();
-   glutSwapBuffers();
+	//  Display parameters
+	glWindowPos2i(5,20);
+	Print("Mode=%d, Angle=%d,%d  Dim=%.1f FOV=%d",mode,th,ph,dim,fov);
+	glWindowPos2i(5,5);
+	Print("Projection=%s th_fps=%d ph_fps=%d x_pos=%f y_pos=%f",modeTitles[mode],th_fps,ph_fps,Ex,Ez);
+
+	//  Render the scene and make it visible
+	glFlush();
+	glutSwapBuffers();
 }
 
 /*
@@ -720,9 +730,6 @@ void key(unsigned char ch,int x,int y)
    //  Exit on ESC
    if (ch == 27)
       exit(0);
-   //  Reset view angle
-   else if (ch == '0')
-      th = ph = 0;
    //  Toggle axes
    else if (ch == '1')
       axes = 1-axes;
@@ -784,7 +791,7 @@ void reshape(int width,int height)
 }
 
 /*
- *  GLUT calls this toutine when there is nothing else to do
+ *  GLUT calls this routine when there is nothing else to do
  */
 void idle()
 {
@@ -806,6 +813,8 @@ int main(int argc,char* argv[])
    glutCreateWindow("Assignment2: Justin Chin");
 
    GenerateStarMatrix();
+
+   GenerateCubeMatrix();
    //  Set callbacks
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
