@@ -91,6 +91,30 @@ Vector normalVec(Vector v1,Vector v2,Vector v3){
    return normVec;
 }
 
+typedef struct {double x,y,z;} vertexPos;
+int vertexPosArr[20][9] = {
+   {0.0,0.0,1,1.0, 1.0, 0.0,0.0, 3.0, 0.0  },
+   {0.0, 0.0, 1, 0.0, 3.0, 0.0, -1.0, 1.0, 0.0 },
+   { 0.0, 0.0, 1, 2.9, 0.9, 0.0, 1.0, 1.0, 0.0 },
+   {0.0, 0.0, 1, 1.5, -0.5, 0.0, 2.9, 0.9, 0.0},
+   {0.0, 0.0, 1, 1.8, -2.7, 0.0, 1.5, -0.5, 0.0},
+   {0.0, 0.0, 1, 0.0, -1.0, 0.0, 1.8, -2.7, 0.0},
+   {0.0, 0.0, 1, -1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
+   {0.0, 0.0, 1, -1.5, -0.5, 0.0, -1.8, -2.7, 0.0},
+   {0.0, 0.0, 1, -2.9, 0.9, 0.0, -1.5, -0.5, 0.0},
+   {0.0, 0.0, 1, -2.9, 0.9, 0.0, -1.0, 1.0, 0.0},
+   {0.0, 0.0, -1, 0.0, 3.0, 0.0, 1.0, 1.0, 0.0},
+   {0.0, 0.0, -1, -1.0, 1.0, 0.0, 0.0, 3.0, 0.0},
+   {0.0, 0.0, -1, 1.0, 1.0, 0.0, 2.9, 0.9, 0.0},
+   {0.0, 0.0, -1, 2.9, 0.9, 0.0, 1.5, -0.5, 0.0},
+   {0.0, 0.0, -1, 1.5, -0.5, 0.0, 1.8, -2.7, 0.0},
+   {0.0, 0.0, -1, 1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
+   {0.0, 0.0, -1, 0.0, -1.0, 0.0, -1.8, -2.7, 0.0},
+   {0.0, 0.0, -1, -1.8, -2.7, 0.0, -1.5, -0.5, 0.0},
+   {0.0, 0.0, -1, -1.5, -0.5, 0.0, -2.9, 0.9, 0.0},
+   {0.0, 0.0, -1, -1.0, 1.0, 0.0, -2.9, 0.9, 0.0}
+};
+
 /*
  *  Draw a cube
  *     at (x,y,z)
@@ -210,6 +234,59 @@ static void ball(double x,double y,double z,double r)
    }
    //  Undo transofrmations
    glPopMatrix();
+}
+
+static void newstar(double x,double y,double z,
+                 double dx,double dy,double dz,
+                 double th)
+{
+
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,y,z);
+   glRotated(th,0,1,0);
+   glScaled(dx,dy,dz);
+   // top-right
+   
+   //vec1 on surface
+   Vector vec1; 
+   Vector vec3; 
+   Vector vec2; 
+   Vector normalVector;
+   Vector midVec;
+   
+   for(int i = 0; i < 20; i++){
+      vec1 = (Vector){vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]};
+      vec2 = (Vector){vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]};
+      vec3 = (Vector){vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]};
+      normalVector = normalVec(vec1,vec2,vec3);
+      
+      //Draw normal vector
+      midVec = middleVec(vec1,vec2,vec3);
+      
+      glColor3f(1,.2,.2);
+      glBegin(GL_LINES);
+      glVertex3f(midVec.x,midVec.y,midVec.z);
+      glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
+      glEnd();
+
+      glColor3f(1,0,1);
+      glNormal3f(normalVector.x, normalVector.y, normalVector.z);
+      glBegin(GL_POLYGON);
+      glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
+      glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
+      glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]);
+      glEnd();
+
+   }    
 }
 
 static void star(double x,double y,double z,
@@ -510,7 +587,7 @@ void display()
    //  Draw scene
    cube(+1,0,0 , 0.5,0.5,0.5 , 0);
    ball(-1,0,0 , 0.5);
-   star(0,1,0 , 0.1,0.1,0.1, 0);
+   newstar(0,1,0 , 0.5,0.5,0.5, 0);
 
    //  Draw axes - no lighting from here on
    glDisable(GL_LIGHTING);
