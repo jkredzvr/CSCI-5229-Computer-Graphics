@@ -28,7 +28,7 @@
 #include "CSCIx229.h"
 
 int axes=1;       //  Display axes
-int mode=1;       //  Projection mode
+int mode=0;       //  mode 2 == move light manually
 int move=1;       //  Move light
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
@@ -50,8 +50,13 @@ int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
 float ylight  =   0;  // Elevation of light
+int cycleNormals = 0;
 
 
+// Light deltaPosition
+double Lx,Ly,Lz;
+double dx,dy,dz;
+double moveSpeed = 0.2;
 
 typedef struct{ float x,y,z; }Vector;
 float dotProduct(Vector a, Vector b)
@@ -92,28 +97,58 @@ Vector normalVec(Vector v1,Vector v2,Vector v3){
 }
 
 typedef struct {double x,y,z;} vertexPos;
-int vertexPosArr[20][9] = {
-   {0.0,0.0,1,1.0, 1.0, 0.0,0.0, 3.0, 0.0  },
-   {0.0, 0.0, 1, 0.0, 3.0, 0.0, -1.0, 1.0, 0.0 },
-   { 0.0, 0.0, 1, 2.9, 0.9, 0.0, 1.0, 1.0, 0.0 },
-   {0.0, 0.0, 1, 1.5, -0.5, 0.0, 2.9, 0.9, 0.0},
-   {0.0, 0.0, 1, 1.8, -2.7, 0.0, 1.5, -0.5, 0.0},
-   {0.0, 0.0, 1, 0.0, -1.0, 0.0, 1.8, -2.7, 0.0},
-   {0.0, 0.0, 1, -1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
-   {0.0, 0.0, 1, -1.5, -0.5, 0.0, -1.8, -2.7, 0.0},
-   {0.0, 0.0, 1, -2.9, 0.9, 0.0, -1.5, -0.5, 0.0},
-   {0.0, 0.0, 1, -2.9, 0.9, 0.0, -1.0, 1.0, 0.0},
-   {0.0, 0.0, -1, 0.0, 3.0, 0.0, 1.0, 1.0, 0.0},
-   {0.0, 0.0, -1, -1.0, 1.0, 0.0, 0.0, 3.0, 0.0},
-   {0.0, 0.0, -1, 1.0, 1.0, 0.0, 2.9, 0.9, 0.0},
-   {0.0, 0.0, -1, 2.9, 0.9, 0.0, 1.5, -0.5, 0.0},
-   {0.0, 0.0, -1, 1.5, -0.5, 0.0, 1.8, -2.7, 0.0},
-   {0.0, 0.0, -1, 1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
-   {0.0, 0.0, -1, 0.0, -1.0, 0.0, -1.8, -2.7, 0.0},
-   {0.0, 0.0, -1, -1.8, -2.7, 0.0, -1.5, -0.5, 0.0},
-   {0.0, 0.0, -1, -1.5, -0.5, 0.0, -2.9, 0.9, 0.0},
-   {0.0, 0.0, -1, -1.0, 1.0, 0.0, -2.9, 0.9, 0.0}
+double vertexPosArr[20][9] = {
+   {0.0,0.0,1.0,1.0, 1.0, 0.0,0.0, 3.0, 0.0  },
+   {0.0, 0.0, 1.0, 0.0, 3.0, 0.0, -1.0, 1.0, 0.0 },
+   { 0.0, 0.0, 1.0, 2.9, 0.9, 0.0, 1.0, 1.0, 0.0 },
+   {0.0, 0.0, 1.0, 1.5, -0.5, 0.0, 2.9, 0.9, 0.0},
+   {0.0, 0.0, 1.0, 1.8, -2.7, 0.0, 1.5, -0.5, 0.0},
+   {0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.8, -2.7, 0.0},
+   {0.0, 0.0, 1.0, -1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
+   {0.0, 0.0, 1.0, -1.5, -0.5, 0.0, -1.8, -2.7, 0.0},
+   {0.0, 0.0, 1.0, -2.9, 0.9, 0.0, -1.5, -0.5, 0.0},
+   {0.0, 0.0, 1.0, -1.0, 1.0, 0.0,-2.9, 0.9, 0.0},
+   {0.0, 0.0, -1.0, 0.0, 3.0, 0.0, 1.0, 1.0, 0.0},
+   {0.0, 0.0, -1.0, -1.0, 1.0, 0.0, 0.0, 3.0, 0.0},
+   {0.0, 0.0, -1.0, 1.0, 1.0, 0.0, 2.9, 0.9, 0.0},
+   {0.0, 0.0, -1.0, 2.9, 0.9, 0.0, 1.5, -0.5, 0.0},
+   {0.0, 0.0, -1.0, 1.5, -0.5, 0.0, 1.8, -2.7, 0.0},
+   {0.0, 0.0, -1.0, 1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
+   {0.0, 0.0, -1.0, 0.0, -1.0, 0.0, -1.8, -2.7, 0.0},
+   {0.0, 0.0, -1.0, -1.8, -2.7, 0.0, -1.5, -0.5, 0.0},
+   {0.0, 0.0, -1.0, -1.5, -0.5, 0.0, -2.9, 0.9, 0.0},
+   {0.0, 0.0, -2.9, 0.9, 0.0, -1.0, 1.0, 1.0, 0.0}
 };
+
+
+/*
+ *  Set projection
+ */
+static void Project1()
+{
+   //  Tell OpenGL we want to manipulate the projection matrix
+   glMatrixMode(GL_PROJECTION);
+   //  Undo previous transformations
+   glLoadIdentity();
+   //  Perspective transformation  
+   switch (mode){
+         //Mode 0 ==  Orthogonal projection
+         case 0:
+            gluPerspective(fov,asp,dim/4,4*dim);            
+            break;
+      //Mode 1 == PerspectiveView
+         case 1:
+            gluPerspective(fov,asp,dim/4,4*dim);
+            break;      
+   }
+   //  Switch to manipulating the model matrix
+   glMatrixMode(GL_MODELVIEW);
+   //  Undo previous transformations
+   glLoadIdentity();
+}
+
+
+
 
 /*
  *  Draw a cube
@@ -270,15 +305,25 @@ static void newstar(double x,double y,double z,
       normalVector = normalVec(vec1,vec2,vec3);
       
       //Draw normal vector
-      midVec = middleVec(vec1,vec2,vec3);
       
-      glColor3f(1,.2,.2);
-      glBegin(GL_LINES);
-      glVertex3f(midVec.x,midVec.y,midVec.z);
-      glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
-      glEnd();
 
-      glColor3f(1,0,1);
+       if(cycleNormals == i){
+         
+         glColor3f(1,.2,.2);
+         midVec = middleVec(vec1,vec2,vec3);
+      
+         
+         glBegin(GL_LINES);
+         glVertex3f(midVec.x,midVec.y,midVec.z);
+         glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
+         glEnd();
+      }
+      if(i%2 ==0){
+         glColor3f(0,0,1);
+      }
+      else{
+         glColor3f(1,0,0);
+      }
       glNormal3f(normalVector.x, normalVector.y, normalVector.z);
       glBegin(GL_POLYGON);
       glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
@@ -287,6 +332,8 @@ static void newstar(double x,double y,double z,
       glEnd();
 
    }    
+   //  Undo transformations
+   glPopMatrix();
 }
 
 static void star(double x,double y,double z,
@@ -438,8 +485,8 @@ static void star(double x,double y,double z,
    glColor3f(1,0,0);
    glBegin(GL_POLYGON);
    glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -2.9, 0.9, 0.0);
    glVertex3f( -1.0, 1.0, 0.0);
+   glVertex3f( -2.9, 0.9, 0.0);
    
    //Backside
    // top-right
@@ -512,8 +559,8 @@ static void star(double x,double y,double z,
    glColor3f(1,0,0);
    glBegin(GL_POLYGON);
    glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -1.0, 1.0, 0.0);
    glVertex3f( -2.9, 0.9, 0.0);
+   glVertex3f( -1.0, 1.0, 0.0);
    glEnd();
 
    //  Undo transformations
@@ -541,12 +588,15 @@ void display()
       double Ey = +2*dim        *Sin(ph);
       double Ez = +2*dim*Cos(th)*Cos(ph);
       gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
+
    }
    //  Orthogonal - set world orientation
    else
    {
-      glRotatef(ph,1,0,0);
-      glRotatef(th,0,1,0);
+      double Ex = -2*dim*Sin(th)*Cos(ph);
+      double Ey = +2*dim        *Sin(ph);
+      double Ez = +2*dim*Cos(th)*Cos(ph);
+      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
    }
 
    //  Flat or smooth shading
@@ -563,7 +613,9 @@ void display()
         float Position[]  = {distance*Cos(zh),ylight,distance*Sin(zh),1.0};
         //  Draw light position as ball (still no lighting here)
         glColor3f(1,1,1);
-        ball(Position[0],Position[1],Position[2] , 0.1);
+
+        
+        
         //  OpenGL should normalize normal vectors
         glEnable(GL_NORMALIZE);
         //  Enable lighting
@@ -579,15 +631,27 @@ void display()
         glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
         glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
         glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
-        glLightfv(GL_LIGHT0,GL_POSITION,Position);
+
+        if(mode == 0){
+            ball(Position[0],Position[1],Position[2] , 0.1);
+            glLightfv(GL_LIGHT0,GL_POSITION,Position);
+        }
+        else{
+            //Update position of light using dxdydz
+            UpdateLightPosition();  
+            ball(Lx,Ly,Lz,0.1);
+            float Position[]  = {Lx,Ly,Lz,1.0};
+            glLightfv(GL_LIGHT0,GL_POSITION,Position);
+        }
    }
    else
      glDisable(GL_LIGHTING);
 
    //  Draw scene
+   newstar(0,1,0 , 0.2,0.2,0.2, 0);
    cube(+1,0,0 , 0.5,0.5,0.5 , 0);
    ball(-1,0,0 , 0.5);
-   newstar(0,1,0 , 0.5,0.5,0.5, 0);
+   //star(.3,1,0 , 0.2,0.2,0.2, 0);
 
    //  Draw axes - no lighting from here on
    glDisable(GL_LIGHTING);
@@ -682,9 +746,42 @@ void special(int key,int x,int y)
    th %= 360;
    ph %= 360;
    //  Update projection
-   Project(mode?fov:0,asp,dim);
+   Project1();
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
+}
+
+void handleLightMovement(unsigned char ch){
+   if (ch=='a')
+      dx -= 1;
+   else if (ch=='d')
+      dx += 1;
+   //  Diffuse level
+   else if (ch=='w')
+      dz -= 1;
+   else if (ch=='s')
+      dz += 1;
+   else if (ch=='e')
+      dy += 1;
+   else if (ch=='q')
+      dy -= 1;
+}
+
+
+void UpdateLightPosition(){
+   if ( dx ==0 && dy==0 && dz == 0){
+      // no translation then continue
+   }
+   else{
+      //New Eye position
+      Lx += moveSpeed*dx;
+      Ly += moveSpeed*dy;
+      Lz += moveSpeed*dz;
+   }
+   //Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
+    dx=0;
+    dy=0;
+    dz=0;
 }
 
 /*
@@ -709,12 +806,14 @@ void key(unsigned char ch,int x,int y)
       mode = 1-mode;
    //  Toggle light movement
    else if (ch == 'm' || ch == 'M')
-      move = 1-move;
+      mode = (mode+1)%2;
    //  Move light
    else if (ch == '<')
       zh += 1;
    else if (ch == '>')
       zh -= 1;
+   else if (ch == 'z')
+      cycleNormals = (cycleNormals+1)%20;
    //  Change field of view angle
    else if (ch == '-' && ch>1)
       fov--;
@@ -725,6 +824,8 @@ void key(unsigned char ch,int x,int y)
       ylight -= 0.1;
    else if (ch==']')
       ylight += 0.1;
+   else if (mode == 1)
+      handleLightMovement(ch);
    //  Ambient level
    else if (ch=='a' && ambient>0)
       ambient -= 5;
@@ -753,9 +854,9 @@ void key(unsigned char ch,int x,int y)
    //  Translate shininess power to value (-1 => 0)
    shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
-   Project(mode?fov:0,asp,dim);
+   Project1();
    //  Animate if requested
-   glutIdleFunc(move?idle:NULL);
+   glutIdleFunc(idle);
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -770,7 +871,7 @@ void reshape(int width,int height)
    //  Set the viewport to the entire window
    glViewport(0,0, width,height);
    //  Set projection
-   Project(mode?fov:0,asp,dim);
+   Project1();
 }
 
 /*
