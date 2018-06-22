@@ -29,7 +29,12 @@
 
 int axes=1;       //  Display axes
 int mode=0;       //  mode 2 == move light manually
-int move=1;       //  Move light
+
+//mouse control
+double Ox=0,Oy=0,Oz=0; //  LookAt Location
+int move=0;            //  Move mode
+int X,Y;               //  Last mouse location
+
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
@@ -57,6 +62,10 @@ int cycleNormals = 0;
 double Lx,Ly,Lz;
 double dx,dy,dz;
 double moveSpeed = 0.2;
+
+// Textures
+unsigned int texture[1]; // Texture names
+
 
 typedef struct{ float x,y,z; }Vector;
 float dotProduct(Vector a, Vector b)
@@ -100,16 +109,16 @@ typedef struct {double x,y,z;} vertexPos;
 double vertexPosArr[20][9] = {
    {0.0,0.0,1.0,1.0, 1.0, 0.0,0.0, 3.0, 0.0  },
    {0.0, 0.0, 1.0, 0.0, 3.0, 0.0, -1.0, 1.0, 0.0 },
-   { 0.0, 0.0, 1.0, 2.9, 0.9, 0.0, 1.0, 1.0, 0.0 },
    {0.0, 0.0, 1.0, 1.5, -0.5, 0.0, 2.9, 0.9, 0.0},
+   { 0.0, 0.0, 1.0, 2.9, 0.9, 0.0, 1.0, 1.0, 0.0 },
+   {0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.8, -2.7, 0.0},   
    {0.0, 0.0, 1.0, 1.8, -2.7, 0.0, 1.5, -0.5, 0.0},
-   {0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 1.8, -2.7, 0.0},
-   {0.0, 0.0, 1.0, -1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
    {0.0, 0.0, 1.0, -1.5, -0.5, 0.0, -1.8, -2.7, 0.0},
-   {0.0, 0.0, 1.0, -2.9, 0.9, 0.0, -1.5, -0.5, 0.0},
+   {0.0, 0.0, 1.0, -1.8, -2.7, 0.0, 0.0, -1.0, 0.0},
    {0.0, 0.0, 1.0, -1.0, 1.0, 0.0,-2.9, 0.9, 0.0},
-   {0.0, 0.0, -1.0, 0.0, 3.0, 0.0, 1.0, 1.0, 0.0},
+   {0.0, 0.0, 1.0, -2.9, 0.9, 0.0, -1.5, -0.5, 0.0},
    {0.0, 0.0, -1.0, -1.0, 1.0, 0.0, 0.0, 3.0, 0.0},
+   {0.0, 0.0, -1.0, 0.0, 3.0, 0.0, 1.0, 1.0, 0.0},
    {0.0, 0.0, -1.0, 1.0, 1.0, 0.0, 2.9, 0.9, 0.0},
    {0.0, 0.0, -1.0, 2.9, 0.9, 0.0, 1.5, -0.5, 0.0},
    {0.0, 0.0, -1.0, 1.5, -0.5, 0.0, 1.8, -2.7, 0.0},
@@ -118,6 +127,7 @@ double vertexPosArr[20][9] = {
    {0.0, 0.0, -1.0, -1.8, -2.7, 0.0, -1.5, -0.5, 0.0},
    {0.0, 0.0, -1.0, -1.5, -0.5, 0.0, -2.9, 0.9, 0.0},
    {0.0, 0.0, -1.0, -2.9, 0.9, 0.0, -1.0, 1.0, 0.0}
+   
 };
 
 
@@ -325,15 +335,31 @@ static void newstar(double x,double y,double z,
          glColor3f(1,0,0);
       }
       glNormal3f(normalVector.x, normalVector.y, normalVector.z);
+
+      //  Enable textures
+      glEnable(GL_TEXTURE_2D);
+      glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE); //GL_MODULATE
+
       glBegin(GL_POLYGON);
-      glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
-      glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
-      glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]);
+
+      if(i%2 ==0){
+         glTexCoord2f(0,0); glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
+         glTexCoord2f(.33,.33); glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
+         glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
+      }
+      else{
+         glTexCoord2f(0,0); glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
+         glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
+         glTexCoord2f(.33,.33); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
+      }
+  
       glEnd();
 
    }    
    //  Undo transformations
    glPopMatrix();
+   //Disable texture applied from other polygons
+   glDisable(GL_TEXTURE_2D);
 }
 
 static void star(double x,double y,double z,
@@ -584,10 +610,11 @@ void display()
    //  Perspective - set eye position
    if (mode)
    {
-      double Ex = -2*dim*Sin(th)*Cos(ph);
-      double Ey = +2*dim        *Sin(ph);
-      double Ez = +2*dim*Cos(th)*Cos(ph);
-      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
+      double Ex = Ox-2*dim*Sin(th)*Cos(ph);
+      double Ey = Oy+2*dim        *Sin(ph);
+      double Ez = Oz+2*dim*Cos(th)*Cos(ph);
+      //gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
+      gluLookAt(Ex,Ey,Ez , Ox,Oy,Oz , 0,1,0);
 
    }
    //  Orthogonal - set world orientation
@@ -674,6 +701,20 @@ void display()
       glRasterPos3d(0.0,0.0,len);
       Print("Z");
    }
+
+   glColor3f(0,1,0);
+   //Grid surface
+   glBegin(GL_LINES); 
+   for(int i=(-dim);i<=dim;i++){
+      glVertex3d(i,0.0,-dim);
+      glVertex3d(i,0.0,dim);
+   }
+
+   for(int i=(-dim);i<=dim;i++){
+      glVertex3d(-dim,0.0,i);
+      glVertex3d(dim,0.0,i);
+   }      
+   glEnd();
 
    //  Display parameters
    glWindowPos2i(5,5);
@@ -875,6 +916,46 @@ void reshape(int width,int height)
 }
 
 /*
+ *  GLUT calls this routine when a mouse is moved
+ */
+void motion(int x,int y)
+{
+   //  Do only when move is set
+   //  WARNING:  this only works because by coincidence 1m = 1pixel
+   if (move)
+   {
+      //  Left/right movement
+      Ox += (X-x)/50.0;
+      //  Near/far or Up/down movement
+      if (move<0)
+         Oy -= (Y-y)/50.0;
+      else
+         Oz += (Y-y)/50.0;
+      //  Remember location
+      X = x;
+      Y = y;
+      glutPostRedisplay();
+   }
+}
+
+/*
+ *  GLUT calls this routine when a mouse button is pressed or released
+ */
+void mouse(int key,int status,int x,int y)
+{
+   //  On button down, set 'move' and remember location
+   if (status==GLUT_DOWN)
+   {
+      move = (key==GLUT_LEFT_BUTTON) ? 1 : -1;
+      X = x;
+      Y = y;
+   }
+   //  On button up, unset move
+   else if (status==GLUT_UP)
+      move = 0;
+}
+
+/*
  *  Start up GLUT and tell it what to do
  */
 int main(int argc,char* argv[])
@@ -890,7 +971,15 @@ int main(int argc,char* argv[])
    glutReshapeFunc(reshape);
    glutSpecialFunc(special);
    glutKeyboardFunc(key);
+
+   glutMouseFunc(mouse);
+   glutMotionFunc(motion);
+
    glutIdleFunc(idle);
+
+
+   //Load Textures
+   texture[0] = LoadTexBMP("corral_out.bmp");
    //  Pass control to GLUT so it can interact with the user
    ErrCheck("init");
    glutMainLoop();
