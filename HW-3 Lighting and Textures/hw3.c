@@ -66,13 +66,13 @@ double dx,dy,dz;
 double moveSpeed = 0.2;
 
 //glass mat
-double alpha = .7;
+double alpha = 100;
 double tankx = 2.0;
 double tanky = 1.0;
 double tankz = 2.0;
 
 // Textures
-unsigned int texture[2]; // Texture names
+unsigned int texture[3]; // Texture names
 
 //Stars
 double numStars = 8; 
@@ -279,7 +279,7 @@ static void fishtank(double x,double y,double z,
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,glass_emission);
 
    glEnable(GL_BLEND);
-   glColor4f(0,.4,.5,alpha);
+   glColor4f(0,.4,.5,alpha*.01);
    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
    glDepthMask(0);
 
@@ -333,6 +333,7 @@ static void fishtank(double x,double y,double z,
    //Sand bottom
    //  Set texture
    glEnable(GL_TEXTURE_2D);
+   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
    glBindTexture(GL_TEXTURE_2D,texture[1]);
    glBegin(GL_QUADS);
    glColor4f(0,.5,.5,1);
@@ -406,7 +407,7 @@ static void newstar(double x,double y,double z,
 
    //  Set specular color to white
    float white[] = {1,1,1,1};
-   float black[] = {0,0,0,1};
+   float black[] = {0,0,0.01*emission,1};
    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
@@ -416,7 +417,7 @@ static void newstar(double x,double y,double z,
    //  Offset
    glTranslated(x,y,z);
    //Rotate flat
-   glRotated(90,1,0,0);
+   glRotated(270,1,0,0);
    //Rotate angled
    glRotated(th,0,0,1);
    glScaled(dx,dy,dz);
@@ -438,38 +439,39 @@ static void newstar(double x,double y,double z,
       //Draw normal vector
       
 
-       if(cycleNormals == i){
+      if(cycleNormals == i){
          
          glColor3f(1,.2,.2);
          midVec = middleVec(vec1,vec2,vec3);
       
-         
          glBegin(GL_LINES);
          glVertex3f(midVec.x,midVec.y,midVec.z);
          glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
          glEnd();
       }
-      if(i%2 ==0){
-         glColor3f(0,0,1);
-      }
-      else{
-         glColor3f(1,0,0);
-      }
-      glNormal3f(normalVector.x, normalVector.y, normalVector.z);
-
+      
       //  Enable textures
       glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D,texture[0]);
-      glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE); //GL_MODULATE
-
-      glBegin(GL_POLYGON);
+      glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE); //GL_REPLACE  //modulate mixes the color with texture color      
+      
+      // Enable Blending
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 
       if(i%2 ==0){
+         glColor4f(1,.98,.8,alpha*.01);
+         glBindTexture(GL_TEXTURE_2D,texture[0]);
+         glBegin(GL_POLYGON);
+         glNormal3f(normalVector.x, normalVector.y, normalVector.z);
          glTexCoord2f(0,0); glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
          glTexCoord2f(.33,.33); glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
          glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
       }
       else{
+         glColor4f(1,.98,.8,alpha*.01);
+         glBindTexture(GL_TEXTURE_2D,texture[0]);
+         glBegin(GL_POLYGON);
+         glNormal3f(normalVector.x, normalVector.y, normalVector.z); 
          glTexCoord2f(0,0); glVertex3f( vertexPosArr[i][0],vertexPosArr[i][1],vertexPosArr[i][2]);
          glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
          glTexCoord2f(.33,.33); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
@@ -482,6 +484,7 @@ static void newstar(double x,double y,double z,
    glPopMatrix();
    //Disable texture applied from other polygons
    glDisable(GL_TEXTURE_2D);
+   glDisable(GL_BLEND);
 }
 
 static void star(double x,double y,double z,
@@ -991,9 +994,9 @@ void key(unsigned char ch,int x,int y)
       fov++;
    else if (ch == 'g')
       GenerateStarMatrix();
-   else if (ch == 'q')
+   else if (ch == 'k')
       alpha--;
-   else if (ch == 'Q')
+   else if (ch == 'K')
       alpha++;
    //  Light elevation
    else if (ch=='[')
@@ -1100,7 +1103,7 @@ int main(int argc,char* argv[])
    //  Initialize GLUT
    glutInit(&argc,argv);
    //  Request double buffered, true color window with Z buffering at 600x600
-   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA);
    glutInitWindowSize(400,400);
    glutCreateWindow("Lighting");
    //  Set callbacks
@@ -1118,6 +1121,8 @@ int main(int argc,char* argv[])
    //Load Textures
    texture[0] = LoadTexBMP("corral_out.bmp");
    texture[1] = LoadTexBMP("gravel_img.bmp");
+
+   texture[2] = LoadTexBMP("S2_out.bmp");
    //  Pass control to GLUT so it can interact with the user
    ErrCheck("init");
    glutMainLoop();
