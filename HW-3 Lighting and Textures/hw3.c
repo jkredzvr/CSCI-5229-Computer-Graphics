@@ -71,7 +71,7 @@ double tanky = 1.0;
 double tankz = 2.0;
 
 // Textures
-unsigned int texture[1]; // Texture names
+unsigned int texture[2]; // Texture names
 
 //Stars
 double numStars = 8; 
@@ -282,7 +282,6 @@ static void fishtank(double x,double y,double z,
    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
    //glDepthMask(0);
 
-
    //  Save transformation
    glPushMatrix();
    //  Offset, scale and rotate
@@ -315,6 +314,8 @@ static void fishtank(double x,double y,double z,
    glVertex3f(-1,-1,+1);
    glVertex3f(-1,+1,+1);
    glVertex3f(-1,+1,-1);
+
+
    //  Bottom
    glColor4f(0,.4,.5,1);
    glNormal3f( 0,-1, 0);
@@ -322,10 +323,24 @@ static void fishtank(double x,double y,double z,
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,-1,+1);
    glVertex3f(-1,-1,+1);
+   glEnd();
+
+   //Sand bottom
+   //  Set texture
+   glEnable(GL_TEXTURE_2D);
+   glBindTexture(GL_TEXTURE_2D,texture[1]);
+   glBegin(GL_QUADS);
+   glColor4f(0,.5,.5,1);
+   glNormal3f( 0,1, 0);
+   glTexCoord2f(0,0); glVertex3f(-1,1,-1);
+   glTexCoord2f(1,0); glVertex3f(+1,1,-1);
+   glTexCoord2f(1,1); glVertex3f(+1,1,+1);
+   glTexCoord2f(0,1); glVertex3f(-1,1,+1);
    //  End
    glEnd();
    //  Undo transofrmations
    glPopMatrix();
+   glDisable(GL_TEXTURE_2D);
 }
 
 
@@ -436,6 +451,7 @@ static void newstar(double x,double y,double z,
 
       //  Enable textures
       glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D,texture[0]);
       glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE); //GL_MODULATE
 
       glBegin(GL_POLYGON);
@@ -1088,6 +1104,7 @@ int main(int argc,char* argv[])
    GenerateStarMatrix();
    //Load Textures
    texture[0] = LoadTexBMP("corral_out.bmp");
+   texture[1] = LoadTexBMP("gravel_img.bmp");
    //  Pass control to GLUT so it can interact with the user
    ErrCheck("init");
    glutMainLoop();
