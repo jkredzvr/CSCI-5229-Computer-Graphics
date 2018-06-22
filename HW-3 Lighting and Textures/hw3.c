@@ -57,6 +57,7 @@ float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
 float ylight  =   0;  // Elevation of light
 int cycleNormals = 0;
+int debugMode = 1;
 
 
 // Light deltaPosition
@@ -76,7 +77,7 @@ unsigned int texture[2]; // Texture names
 //Stars
 double numStars = 8; 
 
-typedef struct {double x,y,z,sx,sy,sz,zhSpinRate;} StarPos;
+typedef struct {double x,y,z,sx,sy,sz,th;} StarPos;
 StarPos *StarPosArr;
 
 typedef struct{ float x,y,z; }Vector;
@@ -157,7 +158,7 @@ void GenerateStarMatrix(){
       double y = .1;
       double z = randDouble(a,b);
       double sx = randDouble(.05,.1);  
-      double rot = randDouble(2,10);
+      double rot = randDouble(0,360);
       StarPos pos ={x,y,z,sx,sx,sx,rot};
       StarPosArr[i] = pos;
    }
@@ -314,8 +315,12 @@ static void fishtank(double x,double y,double z,
    glVertex3f(-1,-1,+1);
    glVertex3f(-1,+1,+1);
    glVertex3f(-1,+1,-1);
+   glEnd();
+   glDisable(GL_BLEND);
+   glDepthMask(1);
 
 
+   glBegin(GL_QUADS);
    //  Bottom
    glColor4f(0,.4,.5,1);
    glNormal3f( 0,-1, 0);
@@ -325,10 +330,6 @@ static void fishtank(double x,double y,double z,
    glVertex3f(-1,-1,+1);
    glEnd();
 
-   glDisable(GL_BLEND);
-   glDepthMask(1);
-
-
    //Sand bottom
    //  Set texture
    glEnable(GL_TEXTURE_2D);
@@ -336,10 +337,10 @@ static void fishtank(double x,double y,double z,
    glBegin(GL_QUADS);
    glColor4f(0,.5,.5,1);
    glNormal3f( 0,1, 0);
-   glTexCoord2f(0,0); glVertex3f(-1,-.9,-1);
-   glTexCoord2f(1,0); glVertex3f(+1,-.9,-1);
-   glTexCoord2f(1,1); glVertex3f(+1,-.9,+1);
-   glTexCoord2f(0,1); glVertex3f(-1,-.9,+1);
+   glTexCoord2f(0,0); glVertex3f(-1,-.98,-1);
+   glTexCoord2f(1,0); glVertex3f(+1,-.98,-1);
+   glTexCoord2f(1,1); glVertex3f(+1,-.98,+1);
+   glTexCoord2f(0,1); glVertex3f(-1,-.98,+1);
    //  End
    glEnd();
    //  Undo transofrmations
@@ -414,7 +415,10 @@ static void newstar(double x,double y,double z,
    glPushMatrix();
    //  Offset
    glTranslated(x,y,z);
+   //Rotate flat
    glRotated(90,1,0,0);
+   //Rotate angled
+   glRotated(th,0,0,1);
    glScaled(dx,dy,dz);
    // top-right
    
@@ -796,10 +800,10 @@ void display()
    //Draw stars
    
    for (int i =0 ; i<=numStars ; i++){
-      newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, 0);
+      newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th);
    }
    
-   fishtank(0,1.25,0, tankx,tanky,tankz , 0);
+   fishtank(0,1,0, tankx,tanky,tankz , 0);
 
 
    //  Draw axes - no lighting from here on
@@ -838,17 +842,20 @@ void display()
    }      
    glEnd();
 
-   //  Display parameters
-   glWindowPos2i(5,5);
-   Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
-     th,ph,dim,fov,mode?"Perpective":"Orthogonal",light?"On":"Off");
-   if (light)
-   {
-      glWindowPos2i(5,45);
-      Print("Model=%s LocalViewer=%s Distance=%d Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",distance,ylight);
-      glWindowPos2i(5,25);
-      Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
+   if(debugMode){
+      //  Display parameters
+      glWindowPos2i(5,5);
+      Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
+        th,ph,dim,fov,mode?"Perpective":"Orthogonal",light?"On":"Off");
+      if (light)
+      {
+         glWindowPos2i(5,45);
+         Print("Model=%s LocalViewer=%s Distance=%d Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",distance,ylight);
+         glWindowPos2i(5,25);
+         Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
+      } 
    }
+   
 
    //  Render the scene and make it visible
    ErrCheck("display");
@@ -1020,6 +1027,8 @@ void key(unsigned char ch,int x,int y)
       shininess -= 1;
    else if (ch=='N' && shininess<7)
       shininess += 1;
+   else if (ch=='`')
+      debugMode = (debugMode+1)%2;
    //  Translate shininess power to value (-1 => 0)
    shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
