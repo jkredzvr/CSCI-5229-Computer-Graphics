@@ -280,7 +280,7 @@ static void fishtank(double x,double y,double z,
    glEnable(GL_BLEND);
    glColor4f(0,.4,.5,alpha);
    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-   //glDepthMask(0);
+   glDepthMask(0);
 
    //  Save transformation
    glPushMatrix();
@@ -325,6 +325,10 @@ static void fishtank(double x,double y,double z,
    glVertex3f(-1,-1,+1);
    glEnd();
 
+   glDisable(GL_BLEND);
+   glDepthMask(1);
+
+
    //Sand bottom
    //  Set texture
    glEnable(GL_TEXTURE_2D);
@@ -332,15 +336,15 @@ static void fishtank(double x,double y,double z,
    glBegin(GL_QUADS);
    glColor4f(0,.5,.5,1);
    glNormal3f( 0,1, 0);
-   glTexCoord2f(0,0); glVertex3f(-1,1,-1);
-   glTexCoord2f(1,0); glVertex3f(+1,1,-1);
-   glTexCoord2f(1,1); glVertex3f(+1,1,+1);
-   glTexCoord2f(0,1); glVertex3f(-1,1,+1);
+   glTexCoord2f(0,0); glVertex3f(-1,-.9,-1);
+   glTexCoord2f(1,0); glVertex3f(+1,-.9,-1);
+   glTexCoord2f(1,1); glVertex3f(+1,-.9,+1);
+   glTexCoord2f(0,1); glVertex3f(-1,-.9,+1);
    //  End
    glEnd();
    //  Undo transofrmations
-   glPopMatrix();
    glDisable(GL_TEXTURE_2D);
+   glPopMatrix();
 }
 
 
