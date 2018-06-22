@@ -26,6 +26,7 @@
  *  ESC        Exit
  */
 #include "CSCIx229.h"
+//#include <math.h>
 
 int axes=1;       //  Display axes
 int mode=0;       //  mode 2 == move light manually
@@ -63,9 +64,20 @@ double Lx,Ly,Lz;
 double dx,dy,dz;
 double moveSpeed = 0.2;
 
+//glass mat
+double alpha = .7;
+double tankx = 2.0;
+double tanky = 1.0;
+double tankz = 2.0;
+
 // Textures
 unsigned int texture[1]; // Texture names
 
+//Stars
+double numStars = 8; 
+
+typedef struct {double x,y,z,sx,sy,sz,zhSpinRate;} StarPos;
+StarPos *StarPosArr;
 
 typedef struct{ float x,y,z; }Vector;
 float dotProduct(Vector a, Vector b)
@@ -129,6 +141,28 @@ double vertexPosArr[20][9] = {
    {0.0, 0.0, -1.0, -2.9, 0.9, 0.0, -1.0, 1.0, 0.0}
    
 };
+
+static double randDouble(double start, double end){
+   int val = (rand() % (int)(end*100 - start*100) ) + (start*100);
+   return val/100.0;
+}
+
+void GenerateStarMatrix(){
+   StarPosArr = malloc(numStars*sizeof(StarPos));
+   for(int i=0; i<numStars; i++) {
+      //double x = randDouble(-(tankx/2)*.95,(tankx/2)*.95);
+      double a = -tankx*.95;
+      double b = tankx*.95;
+      double x = randDouble(a ,b);
+      double y = .1;
+      double z = randDouble(a,b);
+      double sx = randDouble(.05,.1);  
+      double rot = randDouble(2,10);
+      StarPos pos ={x,y,z,sx,sx,sx,rot};
+      StarPosArr[i] = pos;
+   }
+}
+
 
 
 /*
@@ -232,6 +266,70 @@ static void cube(double x,double y,double z,
    glPopMatrix();
 }
 
+static void fishtank(double x,double y,double z,
+                 double dx,double dy,double dz,
+                 double th)
+{
+   //  Set specular color to white
+   float glass_spec[] = {0.9, 0.9, 0.9, 1.0};
+   float glass_emission[] = {0.0,0.0,0.0,1.0};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,.96);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,glass_spec);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,glass_emission);
+
+   glEnable(GL_BLEND);
+   glColor4f(0,.4,.5,alpha);
+   glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+   //glDepthMask(0);
+
+
+   //  Save transformation
+   glPushMatrix();
+   //  Offset, scale and rotate
+   glTranslated(x,y,z);
+   glRotated(th,0,1,0);
+   glScaled(dx,dy,dz);
+   //  Cube
+   glBegin(GL_QUADS);
+   //  Front
+   glNormal3f( 0, 0, 1);
+   glVertex3f(-1,-1, 1);
+   glVertex3f(+1,-1, 1);
+   glVertex3f(+1,+1, 1);
+   glVertex3f(-1,+1, 1);
+   //  Back
+   glNormal3f( 0, 0,-1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,+1,-1);
+   glVertex3f(+1,+1,-1);
+   //  Right
+   glNormal3f(+1, 0, 0);
+   glVertex3f(+1,-1,+1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(+1,+1,-1);
+   glVertex3f(+1,+1,+1);
+   //  Left
+   glNormal3f(-1, 0, 0);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,-1,+1);
+   glVertex3f(-1,+1,+1);
+   glVertex3f(-1,+1,-1);
+   //  Bottom
+   glColor4f(0,.4,.5,1);
+   glNormal3f( 0,-1, 0);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(+1,-1,+1);
+   glVertex3f(-1,-1,+1);
+   //  End
+   glEnd();
+   //  Undo transofrmations
+   glPopMatrix();
+}
+
+
+
 /*
  *  Draw vertex in polar coordinates with normal
  */
@@ -297,7 +395,7 @@ static void newstar(double x,double y,double z,
    glPushMatrix();
    //  Offset
    glTranslated(x,y,z);
-   glRotated(th,0,1,0);
+   glRotated(90,1,0,0);
    glScaled(dx,dy,dz);
    // top-right
    
@@ -675,10 +773,14 @@ void display()
      glDisable(GL_LIGHTING);
 
    //  Draw scene
-   newstar(0,1,0 , 0.2,0.2,0.2, 0);
-   cube(+1,0,0 , 0.5,0.5,0.5 , 0);
-   ball(-1,0,0 , 0.5);
-   //star(.3,1,0 , 0.2,0.2,0.2, 0);
+   //Draw stars
+   
+   for (int i =0 ; i<=numStars ; i++){
+      newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, 0);
+   }
+   
+   fishtank(0,1.25,0, tankx,tanky,tankz , 0);
+
 
    //  Draw axes - no lighting from here on
    glDisable(GL_LIGHTING);
@@ -860,6 +962,12 @@ void key(unsigned char ch,int x,int y)
       fov--;
    else if (ch == '+' && ch<179)
       fov++;
+   else if (ch == 'g')
+      GenerateStarMatrix();
+   else if (ch == 'q')
+      alpha--;
+   else if (ch == 'Q')
+      alpha++;
    //  Light elevation
    else if (ch=='[')
       ylight -= 0.1;
@@ -977,7 +1085,7 @@ int main(int argc,char* argv[])
 
    glutIdleFunc(idle);
 
-
+   GenerateStarMatrix();
    //Load Textures
    texture[0] = LoadTexBMP("corral_out.bmp");
    //  Pass control to GLUT so it can interact with the user
