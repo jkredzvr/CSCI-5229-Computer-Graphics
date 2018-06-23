@@ -59,7 +59,7 @@ float ylight  =   0;  // Elevation of light
 int cycleNormals = 0;
 int debugMode = 1;
 
-
+int tankNumPoly = 10;
 // Light deltaPosition
 double Lx,Ly,Lz;
 double dx,dy,dz;
@@ -290,8 +290,9 @@ static void fishtank(double x,double y,double z,
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
    //  Cube
-   glBegin(GL_QUADS);
+   
    //  Front
+   glBegin(GL_QUADS);
    glNormal3f( 0, 0, 1);
    glVertex3f(-1,-1, 1);
    glVertex3f(+1,-1, 1);
@@ -319,6 +320,68 @@ static void fishtank(double x,double y,double z,
    glDisable(GL_BLEND);
    glDepthMask(1);
 
+
+   //multi mesh glass
+   double mul = 2.0/tankNumPoly;
+   glColor3f(1,1,0);
+   glBegin(GL_QUADS);
+   glNormal3f( 0, 0,-1);
+   for (int i=0;i<tankNumPoly;i++)
+      for (int j=0;j<tankNumPoly;j++){
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+0)-1,-1);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+0)-1,-1);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+1)-1,-1);
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+1)-1,-1);
+      }
+   
+   glEnd();
+   glPushMatrix();
+   glRotated(180,0,1,0);
+   glColor3f(0,1,0);
+   glBegin(GL_QUADS);
+   glNormal3f( 0, 0,-1);
+   for (int i=0;i<tankNumPoly;i++)
+      for (int j=0;j<tankNumPoly;j++){
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+0)-1,-1);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+0)-1,-1);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+1)-1,-1);
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+1)-1,-1);
+      }
+   glEnd();
+   glPopMatrix();
+
+   glPushMatrix();
+   glTranslated(1,0,0);
+   glRotated(90,0,1,0);
+   glColor3f(0,0,1);
+   glBegin(GL_QUADS);
+   glNormal3f( 0, 0,1);
+   for (int i=0;i<tankNumPoly;i++)
+      for (int j=0;j<tankNumPoly;j++){
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+0)-1,0);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+0)-1,0);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+1)-1,0);
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+1)-1,0);
+      }
+   glEnd();
+   glPopMatrix();
+
+   glPushMatrix();
+   glTranslated(-1,0,0);
+   glRotated(90,0,1,0);
+   glColor3f(1,0,1);
+   glBegin(GL_QUADS);
+   glNormal3f( 0, 0,-1);
+   for (int i=0;i<tankNumPoly;i++)
+      for (int j=0;j<tankNumPoly;j++){
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+0)-1,0);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+0)-1,0);
+         glVertex3d(1*mul*(i+1)-1,1*mul*(j+1)-1,0);
+         glVertex3d(1*mul*(i+0)-1,1*mul*(j+1)-1,0);
+      }
+   glEnd();
+   glPopMatrix();
+ 
 
    glBegin(GL_QUADS);
    //  Bottom
@@ -805,7 +868,6 @@ void display()
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th);
    }
-   
    fishtank(0,1,0, tankx,tanky,tankz , 0);
 
 
