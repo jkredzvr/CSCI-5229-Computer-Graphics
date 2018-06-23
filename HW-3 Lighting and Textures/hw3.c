@@ -75,9 +75,9 @@ double tankz = 2.0;
 unsigned int texture[3]; // Texture names
 
 //Stars
-double numStars = 8; 
+double numStars = 12; 
 
-typedef struct {double x,y,z,sx,sy,sz,th;} StarPos;
+typedef struct {double x,y,z,sx,sy,sz,th,r,g,b;} StarPos;
 StarPos *StarPosArr;
 
 typedef struct{ float x,y,z; }Vector;
@@ -97,7 +97,6 @@ Vector vecSubtract(Vector a,Vector b)
    Vector c = {a.x-b.x, a.y-b.y, a.z-b.z};
    return c;
 }
-
 
 Vector middleVec(Vector a,Vector b,Vector c)
 {
@@ -148,18 +147,26 @@ static double randDouble(double start, double end){
    return val/100.0;
 }
 
+static double randInt(int start, int end){
+   int val = (rand() % (int)(end - start) ) + (start);
+   return val/1.0;
+}
+
 void GenerateStarMatrix(){
    StarPosArr = malloc(numStars*sizeof(StarPos));
    for(int i=0; i<numStars; i++) {
       //double x = randDouble(-(tankx/2)*.95,(tankx/2)*.95);
-      double a = -tankx*.95;
-      double b = tankx*.95;
-      double x = randDouble(a ,b);
+      double negx = -tankx*.95;
+      double posx = tankx*.95;
+      double x = randDouble(negx ,posx);
       double y = .1;
-      double z = randDouble(a,b);
+      double z = randDouble(negx ,posx);
       double sx = randDouble(.05,.1);  
       double rot = randDouble(0,360);
-      StarPos pos ={x,y,z,sx,sx,sx,rot};
+      double r = randDouble(0,1);
+      double g = randDouble(0,1);
+      double b = randDouble(0,1);
+      StarPos pos ={x,y,z,sx,sx,sx,rot,r,g,b};
       StarPosArr[i] = pos;
    }
 }
@@ -430,7 +437,7 @@ static void ball(double x,double y,double z,double r)
 
 static void newstar(double x,double y,double z,
                  double dx,double dy,double dz,
-                 double th)
+                 double th,double r,double g, double b)
 {
 
    //  Set specular color to white
@@ -464,8 +471,6 @@ static void newstar(double x,double y,double z,
       normalVector = normalVec(vec1,vec2,vec3);
       
       //Draw normal vector
-      
-
       if(cycleNormals == i){
          
          glColor3f(1,.2,.2);
@@ -484,9 +489,10 @@ static void newstar(double x,double y,double z,
       // Enable Blending
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-
+      
       if(i%2 ==0){
-         glColor4f(1,.98,.8,alpha*.01);
+         //glColor4f(1,1,.2,alpha*.01);
+         glColor4d(r,g,b,(double)alpha*.01);   
          glBindTexture(GL_TEXTURE_2D,texture[0]);
          glBegin(GL_POLYGON);
          glNormal3f(normalVector.x, normalVector.y, normalVector.z);
@@ -495,7 +501,7 @@ static void newstar(double x,double y,double z,
          glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
       }
       else{
-         glColor4f(1,.98,.8,alpha*.01);
+         glColor4d(r,g,b,(double)alpha*.01); 
          glBindTexture(GL_TEXTURE_2D,texture[0]);
          glBegin(GL_POLYGON);
          glNormal3f(normalVector.x, normalVector.y, normalVector.z); 
@@ -599,7 +605,7 @@ void display()
    //Draw stars
    
    for (int i =0 ; i<=numStars ; i++){
-      newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th);
+      newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
    }
    fishtank(0,1,0, tankx,tanky,tankz , 0);
 
