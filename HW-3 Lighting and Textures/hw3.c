@@ -59,7 +59,7 @@ float ylight  =   0;  // Elevation of light
 int cycleNormals = 0;
 int debugMode = 1;
 
-int tankNumPoly = 10;
+int tankNumPoly = 20;
 // Light deltaPosition
 double Lx,Ly,Lz;
 double dx,dy,dz;
@@ -192,9 +192,6 @@ static void Project1()
    glLoadIdentity();
 }
 
-
-
-
 /*
  *  Draw a cube
  *     at (x,y,z)
@@ -289,41 +286,10 @@ static void fishtank(double x,double y,double z,
    glTranslated(x,y,z);
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
-   //  Cube
-   
-   //  Front
-   glBegin(GL_QUADS);
-   glNormal3f( 0, 0, 1);
-   glVertex3f(-1,-1, 1);
-   glVertex3f(+1,-1, 1);
-   glVertex3f(+1,+1, 1);
-   glVertex3f(-1,+1, 1);
-   //  Back
-   glNormal3f( 0, 0,-1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,+1,-1);
-   glVertex3f(+1,+1,-1);
-   //  Right
-   glNormal3f(+1, 0, 0);
-   glVertex3f(+1,-1,+1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(+1,+1,-1);
-   glVertex3f(+1,+1,+1);
-   //  Left
-   glNormal3f(-1, 0, 0);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,-1,+1);
-   glVertex3f(-1,+1,+1);
-   glVertex3f(-1,+1,-1);
-   glEnd();
-   glDisable(GL_BLEND);
-   glDepthMask(1);
-
 
    //multi mesh glass
    double mul = 2.0/tankNumPoly;
-   glColor3f(1,1,0);
+
    glBegin(GL_QUADS);
    glNormal3f( 0, 0,-1);
    for (int i=0;i<tankNumPoly;i++)
@@ -337,7 +303,6 @@ static void fishtank(double x,double y,double z,
    glEnd();
    glPushMatrix();
    glRotated(180,0,1,0);
-   glColor3f(0,1,0);
    glBegin(GL_QUADS);
    glNormal3f( 0, 0,-1);
    for (int i=0;i<tankNumPoly;i++)
@@ -353,7 +318,6 @@ static void fishtank(double x,double y,double z,
    glPushMatrix();
    glTranslated(1,0,0);
    glRotated(90,0,1,0);
-   glColor3f(0,0,1);
    glBegin(GL_QUADS);
    glNormal3f( 0, 0,1);
    for (int i=0;i<tankNumPoly;i++)
@@ -369,7 +333,6 @@ static void fishtank(double x,double y,double z,
    glPushMatrix();
    glTranslated(-1,0,0);
    glRotated(90,0,1,0);
-   glColor3f(1,0,1);
    glBegin(GL_QUADS);
    glNormal3f( 0, 0,-1);
    for (int i=0;i<tankNumPoly;i++)
@@ -381,6 +344,8 @@ static void fishtank(double x,double y,double z,
       }
    glEnd();
    glPopMatrix();
+   glDisable(GL_BLEND);
+   glDepthMask(1);
  
 
    glBegin(GL_QUADS);
@@ -484,7 +449,6 @@ static void newstar(double x,double y,double z,
    //Rotate angled
    glRotated(th,0,0,1);
    glScaled(dx,dy,dz);
-   // top-right
    
    //vec1 on surface
    Vector vec1; 
@@ -548,237 +512,6 @@ static void newstar(double x,double y,double z,
    //Disable texture applied from other polygons
    glDisable(GL_TEXTURE_2D);
    glDisable(GL_BLEND);
-}
-
-static void star(double x,double y,double z,
-                 double dx,double dy,double dz,
-                 double th)
-{
-
-   //  Set specular color to white
-   float white[] = {1,1,1,1};
-   float black[] = {0,0,0,1};
-   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
-
-   //  Save transformation
-   glPushMatrix();
-   //  Offset
-   glTranslated(x,y,z);
-   glRotated(th,0,1,0);
-   glScaled(dx,dy,dz);
-   // top-right
-   
-   //vec1 on surface
-   Vector vec1; 
-   Vector vec3; 
-   Vector vec2; 
-   Vector normalVector;
-   Vector midVec;
-
-   vec1 = (Vector){0,0,1};
-   vec2 = (Vector){1,1,0};
-   vec3 = (Vector){0,3,0};
-   normalVector = normalVec(vec1,vec2,vec3);
-   
-   //Draw normal vector
-   midVec = middleVec(vec1,vec2,vec3);
-   
-   glColor3f(1,.2,.2);
-   glBegin(GL_LINES);
-   glVertex3f(midVec.x,midVec.y,midVec.z);
-   glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
-   glEnd();
-   
-   
-   glColor3f(1,0,1);
-   glNormal3f(normalVector.x, normalVector.y, normalVector.z);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 1.0, 1.0, 0.0);
-   glVertex3f( 0.0, 3.0, 0.0);
-   glEnd();
-
-   ///   
-   vec1 = (Vector){0,0,1};
-   vec2 = (Vector){0,3,0};
-   vec3 = (Vector){-1,1,0};
-   normalVector = normalVec(vec1,vec2,vec3);
-   
-   //Draw normal vector
-   midVec = middleVec(vec1,vec2,vec3);
-   
-   glColor3f(1,.2,.2);
-   glBegin(GL_LINES);
-   glVertex3f(midVec.x,midVec.y,midVec.z);
-   glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
-   glEnd();
-
-
-   // top-left
-   glColor3f(1,1,0);
-   glNormal3f(normalVector.x, normalVector.y, normalVector.z);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 0.0, 3.0, 0.0);
-   glVertex3f( -1.0, 1.0, 0.0);
-   glEnd();
-
-   ///
-   vec1 = (Vector){0,0,1};
-   vec2 = (Vector){2.9,.9,0};
-   vec3 = (Vector){1,1,0};
-   normalVector = normalVec(vec1,vec2,vec3);
-   
-   
-   //Draw normal vector
-   midVec = middleVec(vec1,vec2,vec3);
-   
-   glColor3f(1,.2,.2);
-   glBegin(GL_LINES);
-   glVertex3f(midVec.x,midVec.y,midVec.z);
-   glVertex3f(midVec.x+normalVector.x,midVec.y+normalVector.y,midVec.z+normalVector.z);
-   glEnd();
-
-   // topright-left
-   glColor3f(1,1,0);
-   glNormal3f(normalVector.x, normalVector.y, normalVector.z);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 2.9, 0.9, 0.0);
-   glVertex3f( 1.0, 1.0, 0.0);
-   glEnd();
-   // topright-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 1.5, -0.5, 0.0);
-   glVertex3f( 2.9, 0.9, 0.0);
-   glEnd();
-   
-   // bottomright-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 1.8, -2.7, 0.0);
-   glVertex3f( 1.5, -0.5, 0.0);
-   glEnd();
-   // bottomright-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( 0.0, -1.0, 0.0);
-   glVertex3f( 1.8, -2.7, 0.0);
-   glEnd();
-
-
-   // bottomleft-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -1.8, -2.7, 0.0);
-   glVertex3f( 0.0, -1.0, 0.0);
-   glEnd();
-   // bottomleft-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -1.5, -0.5, 0.0);
-   glVertex3f( -1.8, -2.7, 0.0);
-   glEnd();
-
-   // topleft-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -2.9, 0.9, 0.0);
-   glVertex3f( -1.5, -0.5, 0.0);
-   glEnd();
-   // topleft-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, 1);
-   glVertex3f( -1.0, 1.0, 0.0);
-   glVertex3f( -2.9, 0.9, 0.0);
-   
-   //Backside
-   // top-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 0.0, 3.0, 0.0);
-   glVertex3f( 1.0, 1.0, 0.0);
-   
-   glEnd();
-   // top-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -1.0, 1.0, 0.0);
-   glVertex3f( 0.0, 3.0, 0.0);
-   glEnd();
-   // topright-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 1.0, 1.0, 0.0);
-   glVertex3f( 2.9, 0.9, 0.0);
-   glEnd();
-   // topright-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 2.9, 0.9, 0.0);
-   glVertex3f( 1.5, -0.5, 0.0);
-   glEnd();
-   
-   // bottomright-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 1.5, -0.5, 0.0);
-   glVertex3f( 1.8, -2.7, 0.0);
-   glEnd();
-   // bottomright-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 1.8, -2.7, 0.0);
-   glVertex3f( 0.0, -1.0, 0.0);
-   glEnd();
-   // bottomleft-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( 0.0, -1.0, 0.0);
-   glVertex3f( -1.8, -2.7, 0.0);
-   glEnd();
-   // bottomleft-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -1.8, -2.7, 0.0);
-   glVertex3f( -1.5, -0.5, 0.0);
-   glEnd();
-
-   // topleft-left
-   glColor3f(1,1,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -1.5, -0.5, 0.0);
-   glVertex3f( -2.9, 0.9, 0.0);
-   glEnd();
-   // topleft-right
-   glColor3f(1,0,0);
-   glBegin(GL_POLYGON);
-   glVertex3f( 0.0, 0.0, -1);
-   glVertex3f( -2.9, 0.9, 0.0);
-   glVertex3f( -1.0, 1.0, 0.0);
-   glEnd();
-
-   //  Undo transformations
-   glPopMatrix();
 }
 
 
