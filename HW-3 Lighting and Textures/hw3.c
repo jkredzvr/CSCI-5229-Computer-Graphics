@@ -1,5 +1,5 @@
 /*
- *  Lighting
+ *  HW 3: Lighting and textures
  *
  *  Demonstrates basic lighting using a sphere and a cube.
  *
@@ -12,9 +12,7 @@
  *  n/N        Decrease/increase shininess
  *  F1         Toggle smooth/flat shading
  *  F2         Toggle local viewer mode
- *  F3         Toggle light distance (1/5)
- *  F8         Change ball increment
- *  F9         Invert bottom normal
+
  *  m          Toggles light movement
  *  []         Lower/rise light
  *  p          Toggles ortogonal/perspective projection
@@ -30,22 +28,19 @@
 
 int axes=1;       //  Display axes
 int mode=0;       //  mode 2 == move light manually
-
+double inc = 5;
 //mouse control
 double Ox=0,Oy=0,Oz=0; //  LookAt Location
 int move=0;            //  Move mode
 int X,Y;               //  Last mouse location
-
+int light = 1;
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
-int light=1;      //  Lighting
 double asp=1;     //  Aspect ratio
 double dim=3.0;   //  Size of world
+
 // Light values
-int one       =   1;  // Unit value
-int distance  =   5;  // Light distance
-int inc       =  10;  // Ball increment
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
 int emission  =   0;  // Emission intensity (%)
@@ -56,10 +51,11 @@ int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
 float ylight  =   0;  // Elevation of light
-int cycleNormals = 0;
+
+
+//Debug mode flag
 int debugMode = 1;
 
-int tankNumPoly = 20;
 // Light deltaPosition
 double Lx,Ly,Lz;
 double dx,dy,dz;
@@ -70,6 +66,7 @@ double alpha = 100;
 double tankx = 2.0;
 double tanky = 1.0;
 double tankz = 2.0;
+int tankNumPoly = 20;
 
 // Textures
 unsigned int texture[3]; // Texture names
@@ -155,7 +152,6 @@ static double randInt(int start, int end){
 void GenerateStarMatrix(){
    StarPosArr = malloc(numStars*sizeof(StarPos));
    for(int i=0; i<numStars; i++) {
-      //double x = randDouble(-(tankx/2)*.95,(tankx/2)*.95);
       double negx = -tankx*.95;
       double posx = tankx*.95;
       double x = randDouble(negx ,posx);
@@ -172,109 +168,28 @@ void GenerateStarMatrix(){
 }
 
 
-
 /*
  *  Set projection
  */
-static void Project1()
+static void Project()
 {
    //  Tell OpenGL we want to manipulate the projection matrix
    glMatrixMode(GL_PROJECTION);
    //  Undo previous transformations
    glLoadIdentity();
    //  Perspective transformation  
-   switch (mode){
-         //Mode 0 ==  Orthogonal projection
-         case 0:
-            gluPerspective(fov,asp,dim/4,4*dim);            
-            break;
-      //Mode 1 == PerspectiveView
-         case 1:
-            gluPerspective(fov,asp,dim/4,4*dim);
-            break;      
-   }
+   gluPerspective(fov,asp,dim/4,4*dim);
    //  Switch to manipulating the model matrix
    glMatrixMode(GL_MODELVIEW);
    //  Undo previous transformations
    glLoadIdentity();
 }
 
-/*
- *  Draw a cube
- *     at (x,y,z)
- *     dimensions (dx,dy,dz)
- *     rotated th about the y axis
- */
-static void cube(double x,double y,double z,
-                 double dx,double dy,double dz,
-                 double th)
-{
-   //  Set specular color to white
-   float white[] = {1,1,1,1};
-   float black[] = {0,0,0,1};
-   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
-   //  Save transformation
-   glPushMatrix();
-   //  Offset, scale and rotate
-   glTranslated(x,y,z);
-   glRotated(th,0,1,0);
-   glScaled(dx,dy,dz);
-   //  Cube
-   glBegin(GL_QUADS);
-   //  Front
-   glColor3f(1,0,0);
-   glNormal3f( 0, 0, 1);
-   glVertex3f(-1,-1, 1);
-   glVertex3f(+1,-1, 1);
-   glVertex3f(+1,+1, 1);
-   glVertex3f(-1,+1, 1);
-   //  Back
-   glColor3f(0,0,1);
-   glNormal3f( 0, 0,-1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,+1,-1);
-   glVertex3f(+1,+1,-1);
-   //  Right
-   glColor3f(1,1,0);
-   glNormal3f(+1, 0, 0);
-   glVertex3f(+1,-1,+1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(+1,+1,-1);
-   glVertex3f(+1,+1,+1);
-   //  Left
-   glColor3f(0,1,0);
-   glNormal3f(-1, 0, 0);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,-1,+1);
-   glVertex3f(-1,+1,+1);
-   glVertex3f(-1,+1,-1);
-   //  Top
-   glColor3f(0,1,1);
-   glNormal3f( 0,+1, 0);
-   glVertex3f(-1,+1,+1);
-   glVertex3f(+1,+1,+1);
-   glVertex3f(+1,+1,-1);
-   glVertex3f(-1,+1,-1);
-   //  Bottom
-   glColor3f(1,0,1);
-   glNormal3f( 0,-one, 0);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(+1,-1,+1);
-   glVertex3f(-1,-1,+1);
-   //  End
-   glEnd();
-   //  Undo transofrmations
-   glPopMatrix();
-}
 
 static void fishtank(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th)
-{
+{  
    //  Set specular color to white
    float glass_spec[] = {0.9, 0.9, 0.9, 1.0};
    float glass_emission[] = {0.0,0.0,0.0,1.0};
@@ -306,8 +221,8 @@ static void fishtank(double x,double y,double z,
          glVertex3d(1*mul*(i+1)-1,1*mul*(j+1)-1,-1);
          glVertex3d(1*mul*(i+0)-1,1*mul*(j+1)-1,-1);
       }
-   
    glEnd();
+
    glPushMatrix();
    glRotated(180,0,1,0);
    glBegin(GL_QUADS);
@@ -355,8 +270,8 @@ static void fishtank(double x,double y,double z,
    glDepthMask(1);
  
 
-   glBegin(GL_QUADS);
    //  Bottom
+   glBegin(GL_QUADS);  
    glColor4f(0,.4,.5,1);
    glNormal3f( 0,-1, 0);
    glVertex3f(-1,-1,-1);
@@ -383,8 +298,6 @@ static void fishtank(double x,double y,double z,
    glDisable(GL_TEXTURE_2D);
    glPopMatrix();
 }
-
-
 
 /*
  *  Draw vertex in polar coordinates with normal
@@ -439,7 +352,6 @@ static void newstar(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th,double r,double g, double b)
 {
-
    //  Set specular color to white
    float white[] = {1,1,1,1};
    float black[] = {0,0,0.01*emission,1};
@@ -471,7 +383,7 @@ static void newstar(double x,double y,double z,
       normalVector = normalVec(vec1,vec2,vec3);
       
       //Draw normal vector
-      if(cycleNormals == i){
+      if(debugMode){
          
          glColor3f(1,.2,.2);
          midVec = middleVec(vec1,vec2,vec3);
@@ -509,9 +421,7 @@ static void newstar(double x,double y,double z,
          glTexCoord2f(0,1); glVertex3f( vertexPosArr[i][3],vertexPosArr[i][4],vertexPosArr[i][5]);
          glTexCoord2f(.33,.33); glVertex3f( vertexPosArr[i][6],vertexPosArr[i][7],vertexPosArr[i][8]); 
       }
-  
       glEnd();
-
    }    
    //  Undo transformations
    glPopMatrix();
@@ -526,7 +436,6 @@ static void newstar(double x,double y,double z,
  */
 void display()
 {
-   const double len=2.0;  //  Length of axes
    //  Erase the window and the depth buffer
    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
    //  Enable Z-buffering in OpenGL
@@ -535,83 +444,65 @@ void display()
    //  Undo previous transformations
    glLoadIdentity();
    //  Perspective - set eye position
-   if (mode)
-   {
-      double Ex = Ox-2*dim*Sin(th)*Cos(ph);
-      double Ey = Oy+2*dim        *Sin(ph);
-      double Ez = Oz+2*dim*Cos(th)*Cos(ph);
-      //gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
-      gluLookAt(Ex,Ey,Ez , Ox,Oy,Oz , 0,1,0);
-
-   }
-   //  Orthogonal - set world orientation
-   else
-   {
-      double Ex = -2*dim*Sin(th)*Cos(ph);
-      double Ey = +2*dim        *Sin(ph);
-      double Ez = +2*dim*Cos(th)*Cos(ph);
-      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
-   }
+   double Ex = Ox-2*dim*Sin(th)*Cos(ph);
+   double Ey = Oy+2*dim        *Sin(ph);
+   double Ez = Oz+2*dim*Cos(th)*Cos(ph);
+   gluLookAt(Ex,Ey,Ez , Ox,Oy,Oz , 0,Cos(ph),0);
 
    //  Flat or smooth shading
-   glShadeModel(smooth ? GL_SMOOTH : GL_FLAT);
+   glShadeModel(GL_SMOOTH ); //GL_FLAT 
 
    //  Light switch
-   if (light)
-   {
-        //  Translate intensity to color vectors
-        float Ambient[]   = {0.01*ambient ,0.01*ambient ,0.01*ambient ,1.0};
-        float Diffuse[]   = {0.01*diffuse ,0.01*diffuse ,0.01*diffuse ,1.0};
-        float Specular[]  = {0.01*specular,0.01*specular,0.01*specular,1.0};
-        //  Light position
-        float Position[]  = {distance*Cos(zh),ylight,distance*Sin(zh),1.0};
-        //  Draw light position as ball (still no lighting here)
-        glColor3f(1,1,1);
+   //  Translate intensity to color vectors
+   float Ambient[]   = {0.01*ambient ,0.01*ambient ,0.01*ambient ,1.0};
+   float Diffuse[]   = {0.01*diffuse ,0.01*diffuse ,0.01*diffuse ,1.0};
+   float Specular[]  = {0.01*specular,0.01*specular,0.01*specular,1.0};
+   
+   //  Draw light position as ball (still no lighting here)
+   glColor3f(1,1,1);
 
-        
-        
-        //  OpenGL should normalize normal vectors
-        glEnable(GL_NORMALIZE);
-        //  Enable lighting
-        glEnable(GL_LIGHTING);
-        //  Location of viewer for specular calculations
-        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,local);
-        //  glColor sets ambient and diffuse color materials
-        glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
-        glEnable(GL_COLOR_MATERIAL);
-        //  Enable light 0
-        glEnable(GL_LIGHT0);
-        //  Set ambient, diffuse, specular components and position of light 0
-        glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
-        glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
-        glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
+   //  OpenGL should normalize normal vectors
+   glEnable(GL_NORMALIZE);
+   //  Enable lighting
+   glEnable(GL_LIGHTING);
+   //  Location of viewer for specular calculations
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,local);
+   //  glColor sets ambient and diffuse color materials
+   glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
+   //  Enable light 0
+   glEnable(GL_LIGHT0);
+   //  Set ambient, diffuse, specular components and position of light 0
+   glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
+   glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
+   glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
 
-        if(mode == 0){
-            ball(Position[0],Position[1],Position[2] , 0.1);
-            glLightfv(GL_LIGHT0,GL_POSITION,Position);
-        }
-        else{
-            //Update position of light using dxdydz
-            UpdateLightPosition();  
-            ball(Lx,Ly,Lz,0.1);
-            float Position[]  = {Lx,Ly,Lz,1.0};
-            glLightfv(GL_LIGHT0,GL_POSITION,Position);
-        }
+   //Position of Light
+   if(mode == 0){
+      float Position[]  = {3*Cos(zh),ylight,3*Sin(zh),1.0};
+      ball(Position[0],Position[1],Position[2] , 0.1);
+      glLightfv(GL_LIGHT0,GL_POSITION,Position);
    }
-   else
-     glDisable(GL_LIGHTING);
+   else{
+      //Update position of light using dxdydz
+      UpdateLightPosition();  
+      ball(Lx,Ly,Lz,0.1);
+      float Position[]  = {Lx,Ly,Lz,1.0};
+      glLightfv(GL_LIGHT0,GL_POSITION,Position);
+   }
 
    //  Draw scene
-   //Draw stars
-   
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
    }
    fishtank(0,1,0, tankx,tanky,tankz , 0);
 
+   glDisable(GL_LIGHTING);
+
+
 
    //  Draw axes - no lighting from here on
-   glDisable(GL_LIGHTING);
+   const double len=2.0;  //  Length of axes
    glColor3f(1,1,1);
    if (axes)
    {
@@ -630,34 +521,33 @@ void display()
       Print("Y");
       glRasterPos3d(0.0,0.0,len);
       Print("Z");
+
+      //Grid surface
+      glColor3f(0,1,0);
+      glBegin(GL_LINES); 
+      for(int i=(-dim);i<=dim;i++){
+         glVertex3d(i,0.0,-dim);
+         glVertex3d(i,0.0,dim);
+      }
+
+      for(int i=(-dim);i<=dim;i++){
+         glVertex3d(-dim,0.0,i);
+         glVertex3d(dim,0.0,i);
+      }      
+      glEnd();
    }
 
-   glColor3f(0,1,0);
-   //Grid surface
-   glBegin(GL_LINES); 
-   for(int i=(-dim);i<=dim;i++){
-      glVertex3d(i,0.0,-dim);
-      glVertex3d(i,0.0,dim);
-   }
-
-   for(int i=(-dim);i<=dim;i++){
-      glVertex3d(-dim,0.0,i);
-      glVertex3d(dim,0.0,i);
-   }      
-   glEnd();
 
    if(debugMode){
       //  Display parameters
       glWindowPos2i(5,5);
       Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
-        th,ph,dim,fov,mode?"Perpective":"Orthogonal",light?"On":"Off");
-      if (light)
-      {
-         glWindowPos2i(5,45);
-         Print("Model=%s LocalViewer=%s Distance=%d Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",distance,ylight);
-         glWindowPos2i(5,25);
-         Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
-      } 
+        th,ph,dim,fov,mode?"Perpective":"Orthogonal");
+      
+      glWindowPos2i(5,45);
+      Print("Model=%s LocalViewer=%s Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",ylight);
+      glWindowPos2i(5,25);
+      Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
    }
    
 
@@ -708,19 +598,11 @@ void special(int key,int x,int y)
    //  Local Viewer
    else if (key == GLUT_KEY_F2)
       local = 1-local;
-   else if (key == GLUT_KEY_F3)
-      distance = (distance==1) ? 5 : 1;
-   //  Toggle ball increment
-   else if (key == GLUT_KEY_F8)
-      inc = (inc==10)?3:10;
-   //  Flip sign
-   else if (key == GLUT_KEY_F9)
-      one = -one;
    //  Keep angles to +/-360 degrees
    th %= 360;
    ph %= 360;
    //  Update projection
-   Project1();
+   Project();
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -772,22 +654,12 @@ void key(unsigned char ch,int x,int y)
    //  Toggle axes
    else if (ch == 'x' || ch == 'X')
       axes = 1-axes;
-   //  Toggle lighting
-   else if (ch == 'l' || ch == 'L')
-      light = 1-light;
    //  Switch projection mode
    else if (ch == 'p' || ch == 'P')
       mode = 1-mode;
    //  Toggle light movement
    else if (ch == 'm' || ch == 'M')
       mode = (mode+1)%2;
-   //  Move light
-   else if (ch == '<')
-      zh += 1;
-   else if (ch == '>')
-      zh -= 1;
-   else if (ch == 'z')
-      cycleNormals = (cycleNormals+1)%20;
    //  Change field of view angle
    else if (ch == '-' && ch>1)
       fov--;
@@ -836,7 +708,7 @@ void key(unsigned char ch,int x,int y)
    //  Translate shininess power to value (-1 => 0)
    shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
-   Project1();
+   Project();
    //  Animate if requested
    glutIdleFunc(idle);
    //  Tell GLUT it is necessary to redisplay the scene
@@ -853,7 +725,7 @@ void reshape(int width,int height)
    //  Set the viewport to the entire window
    glViewport(0,0, width,height);
    //  Set projection
-   Project1();
+   Project();
 }
 
 /*
@@ -906,23 +778,20 @@ int main(int argc,char* argv[])
    //  Request double buffered, true color window with Z buffering at 600x600
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA);
    glutInitWindowSize(400,400);
-   glutCreateWindow("Lighting");
+   glutCreateWindow("HW3 : Justin Chin");
    //  Set callbacks
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
    glutSpecialFunc(special);
    glutKeyboardFunc(key);
-
    glutMouseFunc(mouse);
    glutMotionFunc(motion);
-
    glutIdleFunc(idle);
 
    GenerateStarMatrix();
    //Load Textures
    texture[0] = LoadTexBMP("corral_out.bmp");
    texture[1] = LoadTexBMP("gravel_img.bmp");
-
    texture[2] = LoadTexBMP("S2_out.bmp");
    //  Pass control to GLUT so it can interact with the user
    ErrCheck("init");
