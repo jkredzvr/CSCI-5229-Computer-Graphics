@@ -24,8 +24,8 @@ CLEAN=rm -f $(EXE) *.o *.a
 endif
 
 # Dependencies
-hw3.o: hw3.c CSCIx229.h
-fatal.o: fatal.c CSCIx229.h
+hw3.o: hw3.c CSCIx229.h MatrixFunc.h
+fatal.o: fatal.c CSCIx229.h MatrixFunc.h
 loadtexbmp.o: loadtexbmp.c CSCIx229.h
 print.o: print.c CSCIx229.h
 project.o: project.c CSCIx229.h
