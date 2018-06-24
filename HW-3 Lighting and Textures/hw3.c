@@ -1,28 +1,31 @@
 /*
  *  HW 3: Lighting and textures
  *
- *  Demonstrates basic lighting using a sphere and a cube.
+ * Draws a scene of a fish tank with colored star fish on the bottom
+   View 1 shows a perspective view with a point light orbiting automatically
+   View 2 shows a perspective view allowing the user to control the point light with
+   (w,a,s,d,q,e) keys
+
+   Users can also click and drag the scene left,right,forward,and back using the left click on the mouse.
+   Raising and lowering the scene can be done by right clicking and dragging up and down on the scene.
  *
  *  Key bindings:
- *  l          Toggles lighting
- *  a/A        Decrease/increase ambient light
- *  d/D        Decrease/increase diffuse light
- *  s/S        Decrease/increase specular light
- *  e/E        Decrease/increase emitted light
- *  n/N        Decrease/increase shininess
- *  F1         Toggle smooth/flat shading
- *  F2         Toggle local viewer mode
-
- *  m          Toggles light movement
- *  []         Lower/rise light
- *  p          Toggles ortogonal/perspective projection
+ *  `          Toggles on/off the text, axis, and normal vectors pointing out of star surface 
+ *  arrows     Change view angle in View 1 and 2
+   w           Moves light forward
+   a           Moves light back
+   s           Moves light left 
+   d           Moves light right
+ *  g          Generates another 10 randomly placed and randomly colored stars
+ *  x          Turns on and off the axis 
+ *  m          Toggles between automatic light view to user controlled light position
  *  +/-        Change field of view of perspective
- *  x          Toggle axes
  *  arrows     Change view angle
  *  PgDn/PgUp  Zoom in and out
- *  0          Reset view angle
+ *  0          Reset view angle back to 0,0
  *  ESC        Exit
  */
+
 #include "CSCIx229.h"
 #include "MatrixFunc.h"
 #include "RandFunc.h"
@@ -72,6 +75,8 @@ int tankNumPoly = 20;
 
 // Textures
 unsigned int texture[3]; // Texture names
+
+char* modeTitles[]= {"Light Auto Rotate","Light User Control"}; 
 
 //Stars
 double numStars = 12; 
@@ -517,13 +522,10 @@ void display()
    if(debugMode){
       //  Display parameters
       glWindowPos2i(5,5);
-      Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
-        th,ph,dim,fov,mode?"Perpective":"Orthogonal");
+      Print("Angle=%d,%d  Dim=%.1f FOV=%d",th,ph,dim,fov);
       
-      glWindowPos2i(5,45);
-      Print("Model=%s LocalViewer=%s Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",ylight);
       glWindowPos2i(5,25);
-      Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
+      Print("%s",modeTitles[mode]);
    }
    
 
@@ -582,7 +584,6 @@ void handleLightMovement(unsigned char ch){
       dx -= 1;
    else if (ch=='d')
       dx += 1;
-   //  Diffuse level
    else if (ch=='w')
       dz -= 1;
    else if (ch=='s')
@@ -603,8 +604,9 @@ void key(unsigned char ch,int x,int y)
    if (ch == 27)
       exit(0);
    //  Reset view angle
-   else if (ch == '0')
-      th = ph = 0;
+   else if (ch == '0'){
+      th= 0; ph = 45;
+   }
    //  Toggle axes
    else if (ch == 'x' || ch == 'X')
       axes = 1-axes;
@@ -618,10 +620,6 @@ void key(unsigned char ch,int x,int y)
       fov++;
    else if (ch == 'g')
       GenerateStarMatrix();
-   else if (ch == 'k')
-      alpha--;
-   else if (ch == 'K')
-      alpha++;
    else if (mode == 1)
       handleLightMovement(ch);
    else if (ch=='`')
