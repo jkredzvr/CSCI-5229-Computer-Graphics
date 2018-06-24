@@ -25,18 +25,19 @@
  */
 #include "CSCIx229.h"
 #include "MatrixFunc.h"
-//#include <math.h>
+#include "RandFunc.h"
 
 int axes=1;       //  Display axes
 int mode=0;       //  mode 2 == move light manually
 double inc = 5;
+
 //mouse control
 double Ox=0,Oy=0,Oz=0; //  LookAt Location
 int move=0;            //  Move mode
 int X,Y;               //  Last mouse location
 int light = 1;
 int th=0;         //  Azimuth of view angle
-int ph=0;         //  Elevation of view angle
+int ph=45;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 double asp=1;     //  Aspect ratio
 double dim=3.0;   //  Size of world
@@ -45,7 +46,7 @@ double dim=3.0;   //  Size of world
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
 int emission  =   0;  // Emission intensity (%)
-int ambient   =  30;  // Ambient intensity (%)
+int ambient   =  20;  // Ambient intensity (%)
 int diffuse   = 100;  // Diffuse intensity (%)
 int specular  =   0;  // Specular intensity (%)
 int shininess =   0;  // Shininess (power of two)
@@ -103,15 +104,7 @@ double vertexPosArr[20][9] = {
    
 };
 
-static double randDouble(double start, double end){
-   int val = (rand() % (int)(end*100 - start*100) ) + (start*100);
-   return val/100.0;
-}
 
-static double randInt(int start, int end){
-   int val = (rand() % (int)(end - start) ) + (start);
-   return val/1.0;
-}
 
 void GenerateStarMatrix(){
    StarPosArr = malloc(numStars*sizeof(StarPos));
@@ -129,6 +122,22 @@ void GenerateStarMatrix(){
       StarPos pos ={x,y,z,sx,sx,sx,rot,r,g,b};
       StarPosArr[i] = pos;
    }
+}
+
+void UpdateLightPosition(){
+   if ( dx ==0 && dy==0 && dz == 0){
+      // no translation then continue
+   }
+   else{
+      //New Eye position
+      Lx += moveSpeed*dx;
+      Ly += moveSpeed*dy;
+      Lz += moveSpeed*dz;
+   }
+   //Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
+    dx=0;
+    dy=0;
+    dz=0;
 }
 
 /*
@@ -458,6 +467,10 @@ void display()
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
    }
+
+   newstar(0,0,0 , .1,.1,.1, 0,1,0,1);
+
+   
    fishtank(0,1,0, tankx,tanky,tankz , 0);
 
    glDisable(GL_LIGHTING);
@@ -581,22 +594,6 @@ void handleLightMovement(unsigned char ch){
 }
 
 
-void UpdateLightPosition(){
-   if ( dx ==0 && dy==0 && dz == 0){
-      // no translation then continue
-   }
-   else{
-      //New Eye position
-      Lx += moveSpeed*dx;
-      Ly += moveSpeed*dy;
-      Lz += moveSpeed*dz;
-   }
-   //Reset dx,dy,dz so it doesnt continuously calcualte new movement on next call
-    dx=0;
-    dy=0;
-    dz=0;
-}
-
 /*
  *  GLUT calls this routine when a key is pressed
  */
@@ -625,38 +622,8 @@ void key(unsigned char ch,int x,int y)
       alpha--;
    else if (ch == 'K')
       alpha++;
-   //  Light elevation
-   else if (ch=='[')
-      ylight -= 0.1;
-   else if (ch==']')
-      ylight += 0.1;
    else if (mode == 1)
       handleLightMovement(ch);
-   //  Ambient level
-   else if (ch=='a' && ambient>0)
-      ambient -= 5;
-   else if (ch=='A' && ambient<100)
-      ambient += 5;
-   //  Diffuse level
-   else if (ch=='d' && diffuse>0)
-      diffuse -= 5;
-   else if (ch=='D' && diffuse<100)
-      diffuse += 5;
-   //  Specular level
-   else if (ch=='s' && specular>0)
-      specular -= 5;
-   else if (ch=='S' && specular<100)
-      specular += 5;
-   //  Emission level
-   else if (ch=='e' && emission>0)
-      emission -= 5;
-   else if (ch=='E' && emission<100)
-      emission += 5;
-   //  Shininess level
-   else if (ch=='n' && shininess>-1)
-      shininess -= 1;
-   else if (ch=='N' && shininess<7)
-      shininess += 1;
    else if (ch=='`')
       debugMode = (debugMode+1)%2;
    //  Translate shininess power to value (-1 => 0)
