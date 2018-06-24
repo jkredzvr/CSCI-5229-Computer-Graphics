@@ -167,7 +167,6 @@ void GenerateStarMatrix(){
    }
 }
 
-
 /*
  *  Set projection
  */
@@ -178,7 +177,7 @@ static void Project()
    //  Undo previous transformations
    glLoadIdentity();
    //  Perspective transformation  
-   gluPerspective(fov,asp,dim/4,4*dim);
+   gluPerspective(fov,asp,dim/10,5*dim);
    //  Switch to manipulating the model matrix
    glMatrixMode(GL_MODELVIEW);
    //  Undo previous transformations
@@ -502,7 +501,7 @@ void display()
 
 
    //  Draw axes - no lighting from here on
-   const double len=2.0;  //  Length of axes
+   const double len=dim*.9;  //  Length of axes
    glColor3f(1,1,1);
    if (axes)
    {
@@ -592,12 +591,6 @@ void special(int key,int x,int y)
    //  PageDown key - decrease dim
    else if (key == GLUT_KEY_PAGE_UP && dim>1)
       dim -= 0.1;
-   //  Smooth color model
-   else if (key == GLUT_KEY_F1)
-      smooth = 1-smooth;
-   //  Local Viewer
-   else if (key == GLUT_KEY_F2)
-      local = 1-local;
    //  Keep angles to +/-360 degrees
    th %= 360;
    ph %= 360;
@@ -654,9 +647,6 @@ void key(unsigned char ch,int x,int y)
    //  Toggle axes
    else if (ch == 'x' || ch == 'X')
       axes = 1-axes;
-   //  Switch projection mode
-   else if (ch == 'p' || ch == 'P')
-      mode = 1-mode;
    //  Toggle light movement
    else if (ch == 'm' || ch == 'M')
       mode = (mode+1)%2;
@@ -738,12 +728,12 @@ void motion(int x,int y)
    if (move)
    {
       //  Left/right movement
-      Ox += (X-x)/50.0;
+      Ox += (X-x)/50.0*Cos(th) - (Y-y)/50.0*Sin(th);
       //  Near/far or Up/down movement
       if (move<0)
          Oy -= (Y-y)/50.0;
       else
-         Oz += (Y-y)/50.0;
+         Oz += (X-x)/50.0*Sin(th)+(Y-y)/50.0*Cos(th);
       //  Remember location
       X = x;
       Y = y;
