@@ -612,12 +612,12 @@ void drawTree2(double startx,double starty, double len, int theta){
 /*
  *  Draw vertex in polar coordinates
  */
-static void VertexCyl(double th, double height)
+static void VertexCyl(double th, double height, double textX, double textY)
 {  
    //glColor3f(0.0 , 1.0f , 0.0);
    //glColor3f(Cos(th)*Cos(th) , 1.0f , Sin(th)*Sin(th));
-   glNormal3f(Sin(th), height, Cos(th) ) ;
-   glVertex3d(Sin(th), height , Cos(th));
+   glNormal3f(Sin(th), height, Cos(th)) ;
+   glTexCoord2d(textX,textY); glVertex3d(Sin(th), height , Cos(th));
 }
 
 void cylinder(double x,double y,double z,double r, double length, double rot, int dir)
@@ -640,18 +640,37 @@ void cylinder(double x,double y,double z,double r, double length, double rot, in
    //  Latitude bands
    for (int i = 0;i<=increments; i++)
    {   
+      //  Enable textures
+      glEnable(GL_TEXTURE_2D);
+      glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE); //GL_MODULATE  //modulate mixes the color with texture color      
+      
+      // Enable Blending
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA,GL_ONE);      
+      
+      glBindTexture(GL_TEXTURE_2D,texture[0]);
       glBegin(GL_QUAD_STRIP);
       for (th=0;th<=360;th+=d)
       {
          (dir) ? glColor3f(1,0,0):glColor3f(0,1,0);
-         VertexCyl(th,height);
-         VertexCyl(th,height+heightinc);
+         if(fmod(((double)th/(double)d),2.0) == 0){
+            VertexCyl(th,height,0.0,0.0);
+            VertexCyl(th,height+heightinc,0.0,0.1);
+         }
+         else{
+            VertexCyl(th,height,0.1,0.0);
+            VertexCyl(th,height+heightinc,0.1,0.1);
+         }
       }
       height += heightinc;
       glEnd();
    }
    //  Undo transformations
    glPopMatrix();
+   glDisable(GL_TEXTURE_2D);
+   glDisable(GL_BLEND);
+
+
 }
 
 
@@ -664,7 +683,7 @@ void drawCylinderTrees(double startx,double starty,double startz, double len, in
       double endy = (len)*Sin(90-theta) + starty;
 
       //Draw "right" branch
-      cylinder(startx,starty,0.5,0.5,len, -theta,1);
+      cylinder(startx,starty,startz,0.5,len, -theta,1);
       ball(endx,endy,0.0,theta/100.0); 
 
       //Recurse right
