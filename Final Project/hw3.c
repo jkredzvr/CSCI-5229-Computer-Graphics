@@ -474,13 +474,13 @@ void display()
    drawTree2(0.0,0.0,5.0,15);  
    cylinder(0.0,0.0,0.0,0.5,2.0,0.0);
    */
-   cylinder(1.0,0.0,1.0,0.5,2.0,20.0,1);
+   cylinder(1.0,0.0,1.0,0.5,1.0,2.0,20.0,1);
 
-   cylinder(1.0,0.0,1.0,0.5,2.0,-20.0,1);
+   cylinder(1.0,0.0,1.0,0.5,1.0,2.0,-20.0,1);
    
 
-   //double startx,double starty,double startz, double len, int theta
-   drawCylinderTrees(0.0,0.0,0.0,5.0,45);
+   //double startx,double starty,double startz, double radius, double len, int theta
+   drawCylinderTrees(0.0,0.0,0.0,1.0,5.0,45);
      /*
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
@@ -612,15 +612,15 @@ void drawTree2(double startx,double starty, double len, int theta){
 /*
  *  Draw vertex in polar coordinates
  */
-static void VertexCyl(double th, double height, double textX, double textY)
+static void VertexCyl(double th, double radius, double height, double textX, double textY)
 {  
    //glColor3f(0.0 , 1.0f , 0.0);
    //glColor3f(Cos(th)*Cos(th) , 1.0f , Sin(th)*Sin(th));
    glNormal3f(Sin(th), height, Cos(th)) ;
-   glTexCoord2d(textX,textY); glVertex3d(Sin(th), height , Cos(th));
+   glTexCoord2d(textX,textY); glVertex3d(radius*Sin(th), height , radius*Cos(th));
 }
 
-void cylinder(double x,double y,double z,double r, double length, double rot, int dir)
+void cylinder(double x,double y,double z,double r1,  double r2, double length, double rot, int dir)
 {
    const int d=5;
    int th;
@@ -635,7 +635,7 @@ void cylinder(double x,double y,double z,double r, double length, double rot, in
    glTranslated(x,y,z);
    ball(0,length,0,.1);
    glRotated(rot,0,0,1);
-   glScaled(r,1,r);
+   //glScaled(r,1,r);
      
    //  Latitude bands
    for (int i = 0;i<=increments; i++)
@@ -648,18 +648,24 @@ void cylinder(double x,double y,double z,double r, double length, double rot, in
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA,GL_ONE);      
       
+
+      //Scale radius from r1 -> r2 exponentially based on 0->length
+      double r;
+      double slope = (r2-r1)/(length);
+
       glBindTexture(GL_TEXTURE_2D,texture[0]);
       glBegin(GL_QUAD_STRIP);
       for (th=0;th<=360;th+=d)
       {
+         r = slope*height + r1;
          (dir) ? glColor3f(1,0,0):glColor3f(0,1,0);
          if(fmod(((double)th/(double)d),2.0) == 0){
-            VertexCyl(th,height,0.0,0.0);
-            VertexCyl(th,height+heightinc,0.0,0.1);
+            VertexCyl(th,r,height,0.0,0.0);
+            VertexCyl(th,r,height+heightinc,0.0,1.0);
          }
          else{
-            VertexCyl(th,height,0.1,0.0);
-            VertexCyl(th,height+heightinc,0.1,0.1);
+            VertexCyl(th,r,height,1.0,0.0);
+            VertexCyl(th,r,height+heightinc,1.0,1.0);
          }
       }
       height += heightinc;
@@ -677,25 +683,25 @@ void cylinder(double x,double y,double z,double r, double length, double rot, in
 
 
 
-void drawCylinderTrees(double startx,double starty,double startz, double len, int theta){
+void drawCylinderTrees(double startx,double starty,double startz, double radius, double len, int theta){
    if(len > 1){
       double endx = (len)*Cos(90-theta) + startx;
       double endy = (len)*Sin(90-theta) + starty;
 
       //Draw "right" branch
-      cylinder(startx,starty,startz,0.5,len, -theta,1);
+      cylinder(startx,starty,startz,radius, 0.5*radius,len, -theta,1);
       ball(endx,endy,0.0,theta/100.0); 
 
       //Recurse right
-      drawCylinderTrees(endx,endy,0,0.5*len, theta+10);
+      drawCylinderTrees(endx,endy,0, 0.5*radius,0.5*len, theta+10);
       
       double lendx = (len)*Cos(90+theta)+startx;
       double lendy = (len)*Sin(90+theta)+starty;
       //Draw left branch
-      cylinder(startx,starty,startz,0.5,len, theta,0);
+      cylinder(startx,starty,startz,radius, 0.5*radius,len, theta,0);
 
       //Recurse right 
-      drawCylinderTrees(lendx,lendy,0,0.5*len, theta+10);
+      drawCylinderTrees(lendx,lendy,0,0.5*radius,0.5*len, theta+10);
    }
 }
 
