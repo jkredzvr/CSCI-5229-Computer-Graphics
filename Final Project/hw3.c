@@ -325,6 +325,37 @@ static void ball(double x,double y,double z,double r)
    glPopMatrix();
 }
 
+void ballNode(double x,double y,double z,double r, double rot)
+{
+   int th,ph;
+   float yellow[] = {1.0,1.0,0.0,1.0};
+   float Emission[]  = {0.0,0.0,0.01*emission,1.0};
+   //  Save transformation
+   glPushMatrix();
+   //  Offset, scale and rotate
+   glTranslated(x,y,z);
+   glRotated(rot,0,0,1);
+   glScaled(r,r,r);
+   //  White ball
+   glColor3f(1,1,1);
+   glMaterialf(GL_FRONT,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT,GL_SPECULAR,yellow);
+   glMaterialfv(GL_FRONT,GL_EMISSION,Emission);
+   //  Bands of latitude
+   for (ph=-90;ph<90;ph+=inc)
+   {
+      glBegin(GL_QUAD_STRIP);
+      for (th=0;th<=360;th+=2*inc)
+      {
+         Vertex(th,ph);
+         Vertex(th,ph+inc);
+      }
+      glEnd();
+   }
+   //  Undo transofrmations
+   glPopMatrix();
+}
+
 static void newstar(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th,double r,double g, double b)
@@ -474,13 +505,13 @@ void display()
    drawTree2(0.0,0.0,5.0,15);  
    cylinder(0.0,0.0,0.0,0.5,2.0,0.0);
    */
-   cylinder(1.0,0.0,1.0,0.5,1.0,2.0,20.0,1);
+   //cylinder(1.0,0.0,1.0,0.5,1.0,2.0,20.0,1);
 
-   cylinder(1.0,0.0,1.0,0.5,1.0,2.0,-20.0,1);
+   //cylinder(1.0,0.0,1.0,0.5,1.0,2.0,-20.0,1);
    
 
    //double startx,double starty,double startz, double radius, double len, int theta
-   drawCylinderTrees(0.0,0.0,0.0,1.0,5.0,45);
+   drawCylinderTrees(0.0,0.0,0.0,.25,1.5,45);
      /*
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
@@ -632,9 +663,11 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
    //  Save transformation
    glPushMatrix();
    //  Offset and scale
+
    glTranslated(x,y,z);
-   ball(0,length,0,.1);
+   
    glRotated(rot,0,0,1);
+   ball(0,0,0,r2*2.5);
    //glScaled(r,1,r);
      
    //  Latitude bands
@@ -645,8 +678,8 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
       glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE); //GL_MODULATE  //modulate mixes the color with texture color      
       
       // Enable Blending
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA,GL_ONE);      
+      //glEnable(GL_BLEND);
+      //glBlendFunc(GL_SRC_ALPHA,GL_ONE);      
       
 
       //Scale radius from r1 -> r2 exponentially based on 0->length
@@ -674,7 +707,7 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
    //  Undo transformations
    glPopMatrix();
    glDisable(GL_TEXTURE_2D);
-   glDisable(GL_BLEND);
+   //glDisable(GL_BLEND);
 
 
 }
@@ -684,13 +717,15 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
 
 
 void drawCylinderTrees(double startx,double starty,double startz, double radius, double len, int theta){
-   if(len > 1){
+   if(len > .1){
       double endx = (len)*Cos(90-theta) + startx;
       double endy = (len)*Sin(90-theta) + starty;
 
       //Draw "right" branch
       cylinder(startx,starty,startz,radius, 0.5*radius,len, -theta,1);
-      ball(endx,endy,0.0,theta/100.0); 
+
+      //ballNode(endx*1.2,endy,0.0,0.5*radius,-theta); 
+  
 
       //Recurse right
       drawCylinderTrees(endx,endy,0, 0.5*radius,0.5*len, theta+10);
@@ -699,6 +734,8 @@ void drawCylinderTrees(double startx,double starty,double startz, double radius,
       double lendy = (len)*Sin(90+theta)+starty;
       //Draw left branch
       cylinder(startx,starty,startz,radius, 0.5*radius,len, theta,0);
+
+      //ballNode(lendx*1.2,lendy,0.0,0.5*radius,theta);
 
       //Recurse right 
       drawCylinderTrees(lendx,lendy,0,0.5*radius,0.5*len, theta+10);
