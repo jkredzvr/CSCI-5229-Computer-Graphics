@@ -511,7 +511,7 @@ void display()
    
 
    //double startx,double starty,double startz, double radius, double len, int theta
-   drawCylinderTrees(0.0,0.0,0.0,.25,1.5,45);
+   drawCylinderTrees(0.0,0.0,0.0,.25,1.5,30);
      /*
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
@@ -621,6 +621,7 @@ void drawTree2(double startx,double starty, double len, int theta){
       glVertex2d(startx,starty);
       glVertex2d(endx,endy);
       glEnd();
+      
       ball(endx,endy,0.0,theta/100.0); 
 
       //Branch right
@@ -656,9 +657,12 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
    const int d=5;
    int th;
    double height=0;
+
    //# of segments/quads divided in the y/height direction
-   const double heightinc=length/10.0;
-   int increments = 10;
+   int increments = 3;
+   
+   double heightinc=length/(double)increments;
+  
    //printf("%d %f \n",increments,length);
    //  Save transformation
    glPushMatrix();
@@ -667,11 +671,12 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
    glTranslated(x,y,z);
    
    glRotated(rot,0,0,1);
-   ball(0,0,0,r2*2.5);
-   //glScaled(r,1,r);
+
+   //Draw node at end of branch
+   //ball(0,0,0,r2*2.5);
      
    //  Latitude bands
-   for (int i = 0;i<=increments; i++)
+   for (int i = 0;i<increments; i++)
    {   
       //  Enable textures
       glEnable(GL_TEXTURE_2D);
@@ -688,17 +693,18 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
 
       glBindTexture(GL_TEXTURE_2D,texture[0]);
       glBegin(GL_QUAD_STRIP);
+      double ra = slope*height + r1;
+      double rb = slope*(height+heightinc) + r1;
       for (th=0;th<=360;th+=d)
       {
-         r = slope*height + r1;
          (dir) ? glColor3f(1,0,0):glColor3f(0,1,0);
          if(fmod(((double)th/(double)d),2.0) == 0){
-            VertexCyl(th,r,height,0.0,0.0);
-            VertexCyl(th,r,height+heightinc,0.0,1.0);
+            VertexCyl(th,ra,height,0.0,0.0);
+            VertexCyl(th,rb,height+heightinc,0.0,1.0);
          }
          else{
-            VertexCyl(th,r,height,1.0,0.0);
-            VertexCyl(th,r,height+heightinc,1.0,1.0);
+            VertexCyl(th,ra,height,1.0,0.0);
+            VertexCyl(th,rb,height+heightinc,1.0,1.0);
          }
       }
       height += heightinc;
