@@ -719,11 +719,44 @@ void cylinder(double x,double y,double z,double r1,  double r2, double length, d
 }
 
 
+//LSystem
+//Variabes : F + - [ ]
+//Axiom : F
+//Rules : F -> FF+[+F-F-F]-[CF+F+F]
+char sentence[1000]="F";
+void GenerateSentence(){
+   char nextSentence[1000] = "";
+   for(int i = 0 ; i <= strlen(sentence); i++){
+      if (sentence[i] == 'A') 
+      {
+         strcat(nextSentence,"AB");
+      } 
+      else if (sentence[i] == 'B')
+      {
+         strcat(nextSentence,"A");
+      }
+      else if (sentence[i] == '\0')
+      {
+         printf("End\n");
+      }
+      else if (sentence[i] == 'F')
+      {
+         strcat(nextSentence,"FF+[+F-F-F]-[CF+F+F]");
+      }
+      else /* default: */
+      {
+         printf("Undef %c \n",sentence[i]);
+      }
+   }
+   printf("%s \n",nextSentence);
+   strcpy(sentence, nextSentence);
+}
+
 
 
 
 void drawCylinderTrees(double startx,double starty,double startz, double radius, double len, int theta){
-   if(len > .1){
+   if(len > .05){
       double endx = (len)*Cos(90-theta) + startx;
       double endy = (len)*Sin(90-theta) + starty;
 
@@ -821,6 +854,8 @@ void key(unsigned char ch,int x,int y)
    else if (ch == '0'){
       th= 0; ph = 45;
    }
+   else if (ch == 'y')
+      GenerateSentence();
    //  Toggle axes
    else if (ch == 'x' || ch == 'X')
       axes = 1-axes;
@@ -922,6 +957,7 @@ int main(int argc,char* argv[])
    glutIdleFunc(idle);
    drawTree(0.0,0.0,5.0,15);     
    GenerateStarMatrix();
+   GenerateSentence();
    //Load Textures
    texture[0] = LoadTexBMP("corral_out.bmp");
    texture[1] = LoadTexBMP("gravel_img.bmp");
