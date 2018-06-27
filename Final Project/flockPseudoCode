@@ -1,0 +1,69 @@
+Pseudo Code Flocking Simulation
+
+
+initialise_positions()
+
+Main Loop - 
+LOOP
+	draw_boids()  // Taking the position, draw the boids on screen
+	move_all_boids_to_new_positions()  //Calculate next position of boid based on Rules
+END LOOP
+
+
+
+PROCEDURE move_all_boids_to_new_positions()
+
+		Vector v1, v2, v3
+		Boid b
+
+		FOR EACH BOID b
+			v1 = rule1(b)
+			v2 = rule2(b)
+			v3 = rule3(b)
+
+			b.velocity = b.velocity + v1 + v2 + v3
+			b.position = b.position + b.velocity
+		END
+
+END PROCEDURE
+
+
+
+Rule 1: Boids try to fly towards the centre of mass of neighbouring boids. (average position of all the boids)
+Assume we have N boids, called b1, b2, ..., bN. 
+Position of a boid b = b.position. 
+"Center of Mass" c = (b1.position + b2.position + ... + bN.position) / N
+Remember that the positions here are vectors, and N is a scalar.
+
+However, the 'centre of mass' is a property of the entire flock; it is not something that would be considered by an individual boid. I prefer to move the boid toward its 'perceived centre', which is the centre of all the other boids, not including itself. Thus, for boidJ (1 <= J <= N), the perceived centre pcJ is given by:
+
+	pcJ = (b1.position + b2.position + ... + bJ-1.position +
+		bJ+1.position + ... + bN.position) / (N-1)
+Having calculated the perceived centre, we need to work out how to move the boid towards it. To move it 1% of the way towards the centre (this is about the factor I use) this is given by (pcJ - bJ.position) / 100.
+
+Summarising this in pseudocode:
+
+	PROCEDURE rule1(boid bJ)
+
+		Vector pcJ
+
+		FOR EACH BOID b
+			IF b != bJ THEN
+				pcJ = pcJ + b.position
+			END IF
+		END
+
+		pcJ = pcJ / N-1
+
+		RETURN (pcJ - bJ.position) / 100
+
+	END PROCEDURE
+Thus we have calculated the first vector offset, v1, for the boid.
+
+
+
+Goal 1
+Visualize boid system
+
+Goal 2
+Algorithm to draw polygon enclosure for bounds of boids
