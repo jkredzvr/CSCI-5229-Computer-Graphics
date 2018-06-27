@@ -470,12 +470,18 @@ void display()
 
  
    //  Draw scene
-   drawTree2(0.0,0.0,5.0,15);     
+   /*
+   drawTree2(0.0,0.0,5.0,15);  
+   cylinder2(0.0,0.0,0.0,0.5,2.0,0.0);
+
+   cylinder2(0.0,2.0,0.0,0.5,2.0,20.0);
+   */
+
+   drawCylinderTrees(0.0,0.0,0.0,20.0,10.0);
      /*
    for (int i =0 ; i<=numStars ; i++){
       newstar(StarPosArr[i].x,StarPosArr[i].y,StarPosArr[i].z , StarPosArr[i].sx,StarPosArr[i].sy,StarPosArr[i].sz, StarPosArr[i].th,StarPosArr[i].r,StarPosArr[i].g,StarPosArr[i].b);
    }
-
    newstar(0,0,0 , .1,.1,.1, 0,1,0,1);
    */
    
@@ -493,7 +499,7 @@ void display()
    glVertex2f(-1.0,+1.0);
    glEnd();
 
-
+   
  
    /*
    //  Draw blue spiral
@@ -556,7 +562,6 @@ void display()
    glutSwapBuffers();
 }
 
-
 void drawTree(double startx,double starty, double len, int theta){
    if(len > 1){
       double endx = (len)*Cos(theta) + startx;
@@ -599,6 +604,76 @@ void drawTree2(double startx,double starty, double len, int theta){
       drawTree2(lendx,lendy,len*.5,theta+10);  
    }
 }
+
+
+/*
+ *  Draw vertex in polar coordinates
+ */
+static void VertexCyl(double th, double height)
+{  
+   glColor3f(0.0 , 1.0f , 0.0);
+   //glColor3f(Cos(th)*Cos(th) , 1.0f , Sin(th)*Sin(th));
+   glNormal3f(Sin(th), height, Cos(th) ) ;
+   glVertex3d(Sin(th) , height , Cos(th));
+}
+
+void cylinder2(double x,double y,double z,double r, double length, double rot)
+{
+   const int d=5;
+   int th;
+   double height=0;
+   //# of segments/quads divided in the y/height direction
+   const double heightinc=0.1;
+   int increments = 10;
+   //printf("%d %f \n",increments,length);
+   //  Save transformation
+   glPushMatrix();
+   //  Offset and scale
+   glTranslated(x,y,z);
+   ball(0,length,0,.1);
+   glRotated(rot,0,0,1);
+   glScaled(r,length,r);
+     
+   //  Latitude bands
+   for (int i = 0;i<=increments; i++)
+   {   
+      glBegin(GL_QUAD_STRIP);
+      for (th=0;th<=360;th+=d)
+      {
+         VertexCyl(th,height);
+         VertexCyl(th,height+heightinc);
+      }
+      height += heightinc;
+      glEnd();
+   }
+   //  Undo transformations
+   glPopMatrix();
+}
+
+
+
+
+
+void drawCylinderTrees(double startx,double starty,double startz, double len, int theta){
+   if(len > 1){
+      double endx = (len)*Cos(90-theta) + startx;
+      double endy = (len)*Sin(90-theta) + starty;
+
+      cylinder2(startx,starty,startz,0.5,0.5*len, theta);
+      ball(endx,endy,0.0,theta/100.0); 
+
+      //Branch right
+      cylinder2(endx,endy,0,0.5,0.5*len, theta+10);
+      //Branch left
+      double lendx = (len)*Cos(90+theta)+startx;
+      double lendy = (len)*Sin(90+theta)+starty;
+      cylinder2(startx,starty,startz,0.5,0.5*len, theta+10);
+
+      //Branch right
+      cylinder2(lendx,lendy,0,0.5,0.5*len, theta+10);
+   }
+}
+
 
 /*
  *  GLUT calls this routine when the window is resized
